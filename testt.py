@@ -1,3 +1,7 @@
-import cryptomodule
+from cryptomodule.crypto import encrypt
+data = 'adslkjiowejfiwe'
+key =  '1'*32
+iv =   '2'*16
 
-cryptomodule._setup_openssl()
+enc = encrypt(data, (key, iv, 'gost'))
+print(enc)
