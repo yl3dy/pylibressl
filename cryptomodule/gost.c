@@ -90,7 +90,10 @@ static int gost_encrypt(const char* data, int data_len, unsigned char* key,
     return 0;
 }
 
-static int gost_decrypt(unsigned char* enc_data, int enc_data_len, unsigned char* key, unsigned char* iv, unsigned char* data, int* data_len) {
+static int gost_decrypt(unsigned char* enc_data, int enc_data_len,
+                        unsigned char* key, unsigned char* iv,
+                        unsigned char* data, int* data_len)
+{
     setup_openssl();
 
     struct gost_suite gost;
@@ -98,7 +101,26 @@ static int gost_decrypt(unsigned char* enc_data, int enc_data_len, unsigned char
         return 1;
     }
 
+    if(!EVP_DecryptInit_ex(gost.ctx, gost.cipher, gost.engine, key, iv)) {
+        report_error("Could not initialize EVP decryptor");
+        return 1;
+    }
+
+    int len, dec_data_len;
+    if(!EVP_DecryptUpdate(gost.ctx, data, &len, enc_data, enc_data_len)) {
+        report_error("Could not decrypt data");
+        return 1;
+    }
+    dec_data_len = len;
+    if(!EVP_DecryptFinal_ex(gost.ctx, data + len, &len)) {
+        report_error("Descryption finalization failed");
+        return 1;
+    }
+    dec_data_len += len;
+
     gost_cleanup(&gost);
+
+    *data_len = dec_data_len;
 
     return 0;
 }
