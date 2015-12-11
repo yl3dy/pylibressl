@@ -60,5 +60,5 @@ def hash(data):
     if status != 0:
         raise ValueError('Digest status nonzero')
 
-    digest = _cryptomodule.ffi.string(c_digest, c_digest_len[0])
+    digest = bytes(_cryptomodule.ffi.buffer(c_digest, c_digest_len[0]))
     return digest

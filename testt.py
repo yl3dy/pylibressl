@@ -15,3 +15,4 @@ print('### GOST R 34.11.2012 digest test')
 hash_data = b'This is message to hash.'
 dgst = hash(hash_data)
 print(dgst)
+print('Digest length', len(dgst), 'bytes')
