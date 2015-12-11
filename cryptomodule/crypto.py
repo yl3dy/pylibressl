@@ -2,6 +2,9 @@
 
 import cryptomodule._cryptomodule as _cryptomodule
 
+def _retrieve_bytes(cdata, size):
+    return bytes(_cryptomodule.ffi.buffer(cdata, size))
+
 def encrypt(data, qkey):
     """Encrypt data using GOST.
 
@@ -22,7 +25,7 @@ def encrypt(data, qkey):
     if status != 0:
         raise ValueError('Encrypt status nonzero')
 
-    encrypted_data = _cryptomodule.ffi.string(c_enc_data, c_enc_data_len[0])
+    encrypted_data = _retrieve_bytes(c_enc_data, c_enc_data_len[0])
     return encrypted_data
 
 def decrypt(data, qkey):
@@ -45,7 +48,7 @@ def decrypt(data, qkey):
     if status != 0:
         raise ValueError('Decrypt status nonzero')
 
-    decrypted_data = _cryptomodule.ffi.string(c_dec_data, c_dec_data_len[0])
+    decrypted_data = _retrieve_bytes(c_dec_data, c_dec_data_len[0])
     return decrypted_data
 
 def hash(data):
@@ -60,5 +63,5 @@ def hash(data):
     if status != 0:
         raise ValueError('Digest status nonzero')
 
-    digest = bytes(_cryptomodule.ffi.buffer(c_digest, c_digest_len[0]))
+    digest = _retrieve_bytes(c_digest, c_digest_len[0])
     return digest
