@@ -1,11 +1,7 @@
-Crypto backend for Korobok
-==========================
+LibreSSL cffi bindings for Korobok
+==================================
 
-Requires OpenSSL headers (package `libssl-dev` on Debian) and cffi. Use
-`setup.py` to install.
-
-NB!!!
------
-
-This code remains as a starting point for future improvements. Currently not
-used for anything directly.
+Requires LibreSSL and cffi. Headers and libs should be in
+`/usr/local/ssl/include` and `/usr/local/ssl/lib` respectively. Use `python3
+cryptomodule/build.py` to build extensions in development mode. Run tests using
+`LD_LIBRARY_PATH=/usr/local/ssl/lib python3 testt.py`.

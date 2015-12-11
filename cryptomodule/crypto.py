@@ -47,3 +47,18 @@ def decrypt(data, qkey):
 
     decrypted_data = _cryptomodule.ffi.string(c_dec_data, c_dec_data_len[0])
     return decrypted_data
+
+def hash(data):
+    set_arg = _cryptomodule.ffi.new
+
+    c_msg = set_arg('unsigned char[]', data)
+    c_digest = set_arg('unsigned char[]', 1024)   # FIXME
+    c_digest_len = set_arg('unsigned int*')
+
+    status = _cryptomodule.lib.streebog_digest(c_msg, c_digest, c_digest_len)
+
+    if status != 0:
+        raise ValueError('Digest status nonzero')
+
+    digest = _cryptomodule.ffi.string(c_digest, c_digest_len[0])
+    return digest

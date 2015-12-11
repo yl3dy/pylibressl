@@ -124,3 +124,32 @@ static int gost_decrypt(unsigned char* enc_data, int enc_data_len,
 
     return 0;
 }
+
+static int streebog_digest(unsigned char* msg, unsigned char* digest,
+                           unsigned int* digest_len)
+{
+    EVP_MD_CTX* digest_ctx;
+
+    digest_ctx = EVP_MD_CTX_create();
+    if(!digest_ctx) {
+        report_error("Could not initialize digest context");
+        return 1;
+    }
+
+    if(!EVP_DigestInit_ex(digest_ctx, EVP_streebog512(), NULL)) {
+        report_error("Could not initialize Streebog512");
+        return 1;
+    }
+
+    if(!EVP_DigestUpdate(digest_ctx, msg, strlen(msg))) {
+        report_error("Could not update digest");
+    }
+
+    if(!EVP_DigestFinal_ex(digest_ctx, digest, digest_len)) {
+        report_error("Could not finalize digest");
+        return 1;
+    }
+
+    EVP_MD_CTX_destroy(digest_ctx);
+    return 0;
+}
