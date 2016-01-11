@@ -1,0 +1,2 @@
+class HashError(Exception):
+    pass

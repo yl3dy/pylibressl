@@ -1,2 +1,2 @@
-from .digest import hash
+from .digest import StreebogHash
 from .symmetric import encrypt, decrypt

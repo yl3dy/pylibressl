@@ -1,6 +1,6 @@
 """Quick and dirty tests."""
 
-from cryptomodule import hash, encrypt, decrypt
+from cryptomodule import encrypt, decrypt, StreebogHash
 
 print('### GOST 89 encryption test')
 data = b'This is a test message for GOST.'
@@ -15,6 +15,6 @@ print('Encrypt test: ' + ('PASSED' if data == dec else 'FAILED') + '\n')
 
 print('### GOST R 34.11.2012 digest test')
 hash_data = b'This is message to hash.'
-dgst = hash(hash_data)
+dgst = StreebogHash.new(hash_data).digest()
 print(dgst)
 print('Digest length', len(dgst), 'bytes')
