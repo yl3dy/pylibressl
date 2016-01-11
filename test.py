@@ -1,4 +1,6 @@
-from cryptomodule.crypto import encrypt, decrypt, hash
+"""Quick and dirty tests."""
+
+from cryptomodule import hash, encrypt, decrypt
 
 print('### GOST 89 encryption test')
 data = b'This is a test message for GOST.'

@@ -1,30 +1,38 @@
-"""Builder for OpenSSL C API interaction part."""
+import os
 
-from cffi import FFI
-import os.path
+TOPLEVEL_PACKAGE_PATH = os.path.abspath(os.path.dirname(__file__))
+LIBRARIES = ['crypto']
+LIBRARY_DIRS = ['/usr/local/ssl/lib']
+INCLUDE_DIRS = ['/usr/local/ssl/include', TOPLEVEL_PACKAGE_PATH]
+EXTRA_COMPILE_ARGS = []
+EXTRA_LINK_ARGS = []
 
-def _get_gost_source():
-    """Read C source for CFFI."""
-    package_path = os.path.abspath(os.path.dirname(__file__))
-    gost_src_file = os.path.join(package_path, 'gost.c')
-    with open(gost_src_file, 'r') as f:
-        gost_src = f.read()
-    return gost_src
+def is_filename_source(fname):
+    """Check if specified filename is a valid C source.
 
-ffi = FFI()
-ffi.set_source('cryptomodule._cryptomodule', _get_gost_source(),
-               libraries=['crypto'], library_dirs=['/usr/local/ssl/lib'],
-               include_dirs=['/usr/local/ssl/include'])
-ffi.cdef("""
-static int gost_encrypt(const char* data, int data_len, unsigned char* key,
-                        unsigned char* iv, unsigned char* enc_data,
-                        int* c_enc_data_len);
-static int gost_decrypt(unsigned char* enc_data, int enc_data_len,
-                        unsigned char* key, unsigned char* iv,
-                        unsigned char* data, int* data_len);
-static int streebog_digest(unsigned char* msg, unsigned char* digest,
-                           unsigned int* digest_len);
-""")
+    Rules: '.c' extension and never starts with '_' (not to mix with
+    CFFI-generated sources).
 
-if __name__ == '__main__':
-    ffi.compile()
+    """
+    return fname.endswith('.c') and not fname.startswith('_')
+
+def configure_ffi(ffi, package_name, cdef):
+    """Configure FFI object using default settings.
+
+    Assume that the main header is {package_name}.h and grab all C source files
+    in package directory.
+    """
+    join = os.path.join   # just a shorthand
+
+    ffi.cdef(cdef)
+
+    source = '#include "{pkg}/{pkg}.h"'.format(pkg=package_name)
+    # Look for additional source files in package directory
+    source_files = [join('cryptomodule', package_name, fname) for fname in
+                    os.listdir(join(TOPLEVEL_PACKAGE_PATH, package_name)) if
+                    is_filename_source(fname)]
+    ffi.set_source('cryptomodule.{pkg}._{pkg}'.format(pkg=package_name),
+                   source, libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
+                   include_dirs=INCLUDE_DIRS, sources=source_files,
+                   extra_compile_args=EXTRA_COMPILE_ARGS,
+                   extra_link_args=EXTRA_LINK_ARGS)

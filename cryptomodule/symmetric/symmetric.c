@@ -1,14 +1,12 @@
-// Should be used as an argument to ffi.set_source
-
-#include <openssl/evp.h>
+#include "symmetric.h"
 
 static void report_error(const char* msg) {
     printf(">>> OpenSSL C interface: %s\n", msg);
 }
 
-static int gost_encrypt(const char* data, int data_len, unsigned char* key,
-                        unsigned char* iv, unsigned char* enc_data,
-                        int* enc_data_len)
+int gost_encrypt(const char* data, int data_len, unsigned char* key,
+                 unsigned char* iv, unsigned char* enc_data,
+                 int* enc_data_len)
 {
     OpenSSL_add_all_algorithms();
 
@@ -37,9 +35,9 @@ cleanup:
     return 1;
 }
 
-static int gost_decrypt(unsigned char* enc_data, int enc_data_len,
-                        unsigned char* key, unsigned char* iv,
-                        unsigned char* data, int* data_len)
+int gost_decrypt(unsigned char* enc_data, int enc_data_len,
+                 unsigned char* key, unsigned char* iv,
+                 unsigned char* data, int* data_len)
 {
     OpenSSL_add_all_algorithms();
 
@@ -72,33 +70,4 @@ static int gost_decrypt(unsigned char* enc_data, int enc_data_len,
 cleanup:
     EVP_CIPHER_CTX_free(gost_ctx);
     return 1;
-}
-
-static int streebog_digest(unsigned char* msg, unsigned char* digest,
-                           unsigned int* digest_len)
-{
-    EVP_MD_CTX* digest_ctx;
-
-    digest_ctx = EVP_MD_CTX_create();
-    if(!digest_ctx) {
-        report_error("Could not initialize digest context");
-        return 1;
-    }
-
-    if(!EVP_DigestInit_ex(digest_ctx, EVP_streebog512(), NULL)) {
-        report_error("Could not initialize Streebog512");
-        return 1;
-    }
-
-    if(!EVP_DigestUpdate(digest_ctx, msg, strlen((const char*)msg))) {
-        report_error("Could not update digest");
-    }
-
-    if(!EVP_DigestFinal_ex(digest_ctx, digest, digest_len)) {
-        report_error("Could not finalize digest");
-        return 1;
-    }
-
-    EVP_MD_CTX_destroy(digest_ctx);
-    return 0;
 }
