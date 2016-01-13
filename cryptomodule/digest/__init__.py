@@ -30,7 +30,7 @@ class Hash(object):
     def digest(self):
         """Show digest as a byte string."""
 
-class StreebogHash(Hash):
+class Streebog512Hash(Hash):
     """Streebog (GOST R 34.11.2012) hash."""
     def __init__(self):
         ffi = _digest.ffi
