@@ -28,6 +28,9 @@ int gost_encrypt(const char* data, int data_len, unsigned char* key,
     enc_len += len;
     *enc_data_len = enc_len;
 
+    EVP_CIPHER_CTX_free(gost_ctx);
+    EVP_cleanup();
+
     return 0;
 
 cleanup:
@@ -64,6 +67,9 @@ int gost_decrypt(unsigned char* enc_data, int enc_data_len,
     }
     dec_data_len += len;
     *data_len = dec_data_len;
+
+    EVP_CIPHER_CTX_free(gost_ctx);
+    EVP_cleanup();
 
     return 0;
 

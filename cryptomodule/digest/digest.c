@@ -1,8 +1,12 @@
-#include <openssl/evp.h>
-#include <openssl/err.h>
-#include <string.h>
+#include "digest.h"
 
-EVP_MD_CTX* streebog_init(void)
+const EVP_MD* digest_id_init(const char* name)
+{
+    OpenSSL_add_all_digests();
+    return EVP_get_digestbyname(name);
+}
+
+EVP_MD_CTX* digest_init(const EVP_MD* hash_id)
 {
     ERR_load_crypto_strings();
 
@@ -12,7 +16,7 @@ EVP_MD_CTX* streebog_init(void)
         return 0;
     }
 
-    if(!EVP_DigestInit_ex(digest_ctx, EVP_streebog512(), NULL)) {
+    if(!EVP_DigestInit_ex(digest_ctx, hash_id, NULL)) {
         ERR_print_errors_fp(stderr);
         return 0;
     }
@@ -20,12 +24,13 @@ EVP_MD_CTX* streebog_init(void)
     return digest_ctx;
 }
 
-void streebog_teardown(EVP_MD_CTX* digest_ctx)
+void digest_teardown(EVP_MD_CTX* digest_ctx)
 {
     EVP_MD_CTX_destroy(digest_ctx);
+    EVP_cleanup();
 }
 
-int streebog_update(EVP_MD_CTX* digest_ctx, const char* msg, unsigned int msg_len)
+int digest_update(EVP_MD_CTX* digest_ctx, const char* msg, unsigned int msg_len)
 {
     if(!EVP_DigestUpdate(digest_ctx, msg, msg_len)) {
         ERR_print_errors_fp(stderr);
@@ -34,7 +39,7 @@ int streebog_update(EVP_MD_CTX* digest_ctx, const char* msg, unsigned int msg_le
     return 1;
 }
 
-int streebog_final(EVP_MD_CTX* digest_ctx, unsigned char* digest, unsigned int* digest_len)
+int digest_final(EVP_MD_CTX* digest_ctx, unsigned char* digest, unsigned int* digest_len)
 {
     if(!EVP_DigestFinal_ex(digest_ctx, digest, digest_len)) {
         ERR_print_errors_fp(stderr);
