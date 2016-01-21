@@ -1,0 +1,21 @@
+from cryptomodule import build as core_build
+import cffi
+
+cdef = """
+typedef ... EVP_CIPHER;
+
+const EVP_CIPHER* EVP_gost2814789_cnt(void);
+
+int cipher_encrypt(EVP_CIPHER* cipher, const char* data, int data_len, unsigned char* key,
+                   unsigned char* iv, unsigned char* enc_data,
+                   int* enc_data_len);
+int cipher_decrypt(EVP_CIPHER* cipher, unsigned char* enc_data, int enc_data_len,
+                   unsigned char* key, unsigned char* iv,
+                   unsigned char* data, int* data_len);
+"""
+
+ffi = cffi.FFI()
+core_build.configure_ffi(ffi, 'cipher', cdef)
+
+if __name__ == '__main__':
+    ffi.compile()

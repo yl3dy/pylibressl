@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGES="digest symmetric"
+PACKAGES="digest cipher"
 
 for pkg in $PACKAGES; do
     echo "### Building package $pkg"
