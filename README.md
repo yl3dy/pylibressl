@@ -1,7 +1,12 @@
 LibreSSL cffi bindings for Korobok
 ==================================
 
-Requires LibreSSL and cffi. Headers and libs should be in
-`/usr/local/ssl/include` and `/usr/local/ssl/lib` respectively. Use `python3
-cryptomodule/build.py` to build extensions in development mode. Run tests using
-`LD_LIBRARY_PATH=/usr/local/ssl/lib python3 testt.py`.
+Requirements:
+
+* LibreSSL (headers and libs should be in `/usr/local/ssl/include` and `/usr/local/ssl/lib` respectively)
+* cffi > 1.0.0
+* pytest
+
+Before testing/building `export LD_LIBRARY_PATH=/usr/local/ssl/lib` should be
+called. To build extensions in dev mode, call `./dev_build.sh`. Run tests using
+`python3 -m pytest`.

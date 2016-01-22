@@ -1,12 +1,8 @@
 """
 Cryptomodule for Ghostbox.
 
-Contains many cryptographic primitives for usage in Ghostbox.
-
-Examples:
-
->>> from cryptomodule.digest import SHA512
->>> data = b'Some binary data'
->>> data_digest = SHA512.new(data).digest()
+Contains many cryptographic primitives for usage in Ghostbox. Currently some
+digests and symmetric ciphers are supported. For more details, see appropriate
+subpackages.
 
 """

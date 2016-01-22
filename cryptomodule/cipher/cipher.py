@@ -66,8 +66,8 @@ class _Cipher(object):
 
 class GOST89(_Cipher):
     """GOST89 cipher in counter mode."""
-    KEY_LENGTH = 16
-    IV_LENGTH = 32
+    KEY_LENGTH = 32
+    IV_LENGTH = 8
     MODE = 'CTR'
 
     def __init__(self, *args):

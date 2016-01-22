@@ -28,5 +28,5 @@ class GenericCipherTest:
 
 class TestGOST89(GenericCipherTest):
     CIPHER_CLASS = GOST89
-    KEY_LENGTH = 16
-    IV_LENGTH = 32
+    KEY_LENGTH = 32
+    IV_LENGTH = 8
