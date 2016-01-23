@@ -10,6 +10,7 @@ from cryptomodule.exceptions import *
 # Mode identifiers
 MODE_CTR = 1
 MODE_GCM = 2
+MODE_CBC = 3
 
 class _Cipher(object):
     @classmethod
@@ -18,7 +19,7 @@ class _Cipher(object):
         # verify key/IV validity
         if type(key) != type(b'') or type(iv) != type(b''):
             raise ValueError('Key/IV values should be bytes instances')
-        if len(key) != cls.KEY_LENGTH or len(iv) != cls.IV_LENGTH:
+        if len(key) != cls.KEY_LENGTH or len(iv) != cls.BLOCK_SIZE:
             raise ValueError('Key/IV lengths are incorrect')
 
         if not mode in cls.MODES:
@@ -73,7 +74,7 @@ class _Cipher(object):
 class GOST89(_Cipher):
     """GOST 28147-89 cipher."""
     KEY_LENGTH = 32
-    IV_LENGTH = 8
+    BLOCK_SIZE = 8
     MODES = (MODE_CTR,)
 
     def __init__(self, *args):
@@ -83,9 +84,10 @@ class GOST89(_Cipher):
 class AES256(_Cipher):
     """AES 256-bit cipher."""
     KEY_LENGTH = 32
-    IV_LENGTH = 32
-    MODES = (MODE_CTR,)
+    BLOCK_SIZE = 16
+    MODES = (MODE_CTR, MODE_CBC)
 
     def __init__(self, *args):
-        self._CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_aes_256_ctr()}
+        self._CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_aes_256_ctr(), MODE_CBC:
+                           _cipher.lib.EVP_aes_256_cbc()}
         _Cipher.__init__(self, *args)

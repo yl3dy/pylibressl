@@ -6,6 +6,7 @@ typedef ... EVP_CIPHER;
 
 const EVP_CIPHER* EVP_gost2814789_cnt(void);
 const EVP_CIPHER* EVP_aes_256_ctr(void);
+const EVP_CIPHER* EVP_aes_256_cbc(void);
 
 int cipher_encrypt(EVP_CIPHER* cipher, const char* data, int data_len, unsigned char* key,
                    unsigned char* iv, unsigned char* enc_data,
