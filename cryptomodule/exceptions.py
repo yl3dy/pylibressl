@@ -3,3 +3,6 @@ class HashError(Exception):
 
 class CipherError(Exception):
     pass
+
+class AuthencityError(Exception):
+    pass
