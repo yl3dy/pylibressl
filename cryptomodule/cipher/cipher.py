@@ -2,7 +2,7 @@ import warnings
 try:
     from . import _cipher
 except ImportError:
-    warnings.warn('Symmetric encryption C module not compiled', RuntimeWarning)
+    raise ImportError('Symmetric encryption C module not compiled')
 
 import cryptomodule.lib as lib
 from cryptomodule.exceptions import *
@@ -13,6 +13,10 @@ MODE_GCM = 2
 MODE_CBC = 3
 
 class _Cipher(object):
+    """Generic cipher object."""
+
+    _ERROR_MSG_LENGTH = 256
+
     @classmethod
     def new(cls, key, iv, mode):
         """Create new cipher object."""
@@ -22,7 +26,7 @@ class _Cipher(object):
         if len(key) != cls.KEY_LENGTH or len(iv) != cls.BLOCK_SIZE:
             raise ValueError('Key/IV lengths are incorrect')
 
-        if not mode in cls.MODES:
+        if not mode in cls._CIPHER_IDS.keys():
             raise ValueError('Incorrect mode specified')
 
         cipher = cls(key, iv, mode)
@@ -33,8 +37,20 @@ class _Cipher(object):
         self._iv = iv
         self._CIPHER_ID = self._CIPHER_IDS[mode]
         self.MODE = mode
-        assert set(self.MODES) == set(self._CIPHER_IDS.keys())
+        self.MODES = tuple(self._CIPHER_IDS.keys())
         self._AEAD_TAG_SIZE = _cipher.lib.AEAD_TAG_SIZE
+
+    def _report_library_error(self, c_err_msg):
+        err_msg = _cipher.ffi.string(c_err_msg)
+
+        # Usually, we don't want to see some weird characters from EBDIC.
+        # Still, if there are bytes from range 128-255, then report as a byte
+        # string.
+        try:
+            err_msg = err_msg.decode('ascii')
+        except UnicodeDecodeError:
+            pass
+        return err_msg
 
 
     def _encrypt(self, data):
@@ -45,13 +61,16 @@ class _Cipher(object):
         c_iv = ffi.new('unsigned char[]', self._iv)
         c_enc_data = ffi.new('unsigned char[]', 2*len(data))
         c_enc_data_len = ffi.new('int *')
+        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_encrypt(self._CIPHER_ID, c_data, len(data),
                                             c_key, c_iv, c_enc_data,
-                                            c_enc_data_len)
+                                            c_enc_data_len, c_err_msg,
+                                            self._ERROR_MSG_LENGTH)
 
         if not status:
-            raise CipherError('LibreSSL binding error')
+            err_msg = self._report_library_error(c_err_msg)
+            raise LibreSSLError(err_msg)
 
         encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
         return encrypted_data
@@ -68,14 +87,18 @@ class _Cipher(object):
         c_tag = ffi.new('unsigned char[]', self._AEAD_TAG_SIZE)
         c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
         aad_len = len(aad) if aad else 0
+        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_aead_encrypt(self._CIPHER_ID, c_data,
                                                  len(data), c_key, c_iv,
                                                  c_enc_data, c_enc_data_len,
-                                                 c_tag, c_aad, aad_len)
+                                                 c_tag, c_aad, aad_len,
+                                                 c_err_msg,
+                                                 self._ERROR_MSG_LENGTH)
 
         if not status:
-            raise CipherError('LibreSSL binding error')
+            err_msg = self._report_library_error(c_err_msg)
+            raise LibreSSLError(err_msg)
 
         encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
         tag = lib.retrieve_bytes(_cipher.ffi, c_tag, self._AEAD_TAG_SIZE)
@@ -96,12 +119,15 @@ class _Cipher(object):
         c_iv = ffi.new('unsigned char[]', self._iv)
         c_dec_data = ffi.new('unsigned char[]', len(data))
         c_dec_data_len = ffi.new('int*')
+        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_decrypt(self._CIPHER_ID, c_enc_data,
                                             len(data), c_key, c_iv, c_dec_data,
-                                            c_dec_data_len)
+                                            c_dec_data_len, c_err_msg,
+                                            self._ERROR_MSG_LENGTH)
         if not status:
-            raise CipherError('LibreSSL binding error')
+            err_msg = self._report_library_error(c_err_msg)
+            raise LibreSSLError(err_msg)
 
         decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])
         return decrypted_data
@@ -118,16 +144,20 @@ class _Cipher(object):
         c_tag = ffi.new('unsigned char[]', tag)
         c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
         aad_len = len(aad) if aad else 0
+        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_aead_decrypt(self._CIPHER_ID, c_enc_data,
                                                  len(data), c_key, c_iv,
                                                  c_dec_data, c_dec_data_len,
-                                                 c_tag, c_aad, aad_len)
+                                                 c_tag, c_aad, aad_len,
+                                                 c_err_msg,
+                                                 self._ERROR_MSG_LENGTH)
 
         if not status:
             if status == -1:
                 raise AuthencityError('Cannot decrypt message: is not authentic')
-            raise CipherError('LibreSSL binding error')
+            err_msg = self._report_library_error(c_err_msg)
+            raise LibreSSLError(err_msg)
 
         decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])
         return decrypted_data
@@ -139,24 +169,18 @@ class _Cipher(object):
         else:
             return self._decrypt(data)
 
+
+
 class GOST89(_Cipher):
-    """GOST 28147-89 cipher."""
+    """GOST R 28147-89 cipher."""
     KEY_LENGTH = 32
     BLOCK_SIZE = 8
-    MODES = (MODE_CTR,)
-
-    def __init__(self, *args):
-        self._CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_gost2814789_cnt()}
-        _Cipher.__init__(self, *args)
+    _CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_gost2814789_cnt()}
 
 class AES256(_Cipher):
     """AES 256-bit cipher."""
     KEY_LENGTH = 32
     BLOCK_SIZE = 16
-    MODES = (MODE_CTR, MODE_CBC, MODE_GCM)
-
-    def __init__(self, *args):
-        self._CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_aes_256_ctr(),
-                            MODE_CBC: _cipher.lib.EVP_aes_256_cbc(),
-                            MODE_GCM: _cipher.lib.EVP_aes_256_gcm()}
-        _Cipher.__init__(self, *args)
+    _CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_aes_256_ctr(),
+                   MODE_CBC: _cipher.lib.EVP_aes_256_cbc(),
+                   MODE_GCM: _cipher.lib.EVP_aes_256_gcm()}

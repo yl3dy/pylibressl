@@ -27,10 +27,13 @@ def configure_ffi(ffi, package_name, cdef):
     ffi.cdef(cdef)
 
     source = '#include "{pkg}/{pkg}.h"'.format(pkg=package_name)
+    source = '\n'.join((source, '#include "cryptomodule_lib.h"'))
+
+    source_files = ['cryptomodule/cryptomodule_lib.c']
     # Look for additional source files in package directory
-    source_files = [join('cryptomodule', package_name, fname) for fname in
-                    os.listdir(join(TOPLEVEL_PACKAGE_PATH, package_name)) if
-                    is_filename_source(fname)]
+    source_files += [join('cryptomodule', package_name, fname) for fname in
+                     os.listdir(join(TOPLEVEL_PACKAGE_PATH, package_name)) if
+                     is_filename_source(fname)]
     ffi.set_source('cryptomodule.{pkg}._{pkg}'.format(pkg=package_name),
                    source, libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
                    include_dirs=INCLUDE_DIRS, sources=source_files,

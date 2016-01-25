@@ -6,3 +6,6 @@ class CipherError(Exception):
 
 class AuthencityError(Exception):
     pass
+
+class LibreSSLError(Exception):
+    pass

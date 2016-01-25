@@ -1,7 +1,7 @@
 import pytest
 from cryptomodule.cipher import GOST89, AES256
 from cryptomodule.cipher import MODE_CTR, MODE_CBC, MODE_GCM
-from cryptomodule.exceptions import CipherError, AuthencityError
+from cryptomodule.exceptions import CipherError, AuthencityError, LibreSSLError
 
 class GenericCipherTest:
     """Base class for cipher tests
@@ -138,20 +138,26 @@ class GenericCipherTest:
                 decoded = cipher.decrypt(encoded, tag)
 
 
-    # The following test produces LibreSSL error:
-    # digital envelope routines:EVP_DecryptFinal_ex:bad decrypt:evp/evp_enc.c:529:
-    # TODO: find out if this is ok for different keys
-    #def test_decrypt_with_different_keys(self):
-        #self.setup_key_iv()
+    def test_decrypt_with_different_keys(self):
+        # The following test should produce LibreSSL error for CBC mode (maybe
+        # other block modes):
+        # digital envelope routines:EVP_DecryptFinal_ex:bad decrypt:evp/evp_enc.c:529:
+        self.setup_key_iv()
 
-        #for mode in self.MODES:
-            #cipher_1 = self.CIPHER_CLASS.new(self.good_key, self.good_iv,
-                                              #mode)
-            #cipher_2 = self.CIPHER_CLASS.new(self.good_key_2, self.good_iv,
-                                              #mode)
-            #encoded = cipher_1.encrypt(self.good_string)
-            #decoded = cipher_2.decrypt(encoded)
-            #assert self.good_string != decoded
+        for mode in self.MODES:
+            if mode in self.AEAD_MODES: break
+            cipher_1 = self.CIPHER_CLASS.new(self.good_key, self.good_iv,
+                                              mode)
+            cipher_2 = self.CIPHER_CLASS.new(self.good_key_2, self.good_iv,
+                                              mode)
+            encoded = cipher_1.encrypt(self.good_string)
+
+            if mode == MODE_CBC:
+                with pytest.raises(LibreSSLError):
+                    decoded = cipher_2.decrypt(encoded)
+            else:
+                decoded = cipher_2.decrypt(encoded)
+                assert self.good_string != decoded
 
     def test_input_types(self):
         bad_key = 'lorem ipsum'
