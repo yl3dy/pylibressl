@@ -2,6 +2,7 @@
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include "cryptomodule_lib.h"
 
 extern const EVP_MD* digest_id_init(const char* name);
 extern EVP_MD_CTX* digest_init(const EVP_MD* hash_id);

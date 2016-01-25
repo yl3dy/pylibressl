@@ -6,3 +6,6 @@ digests and symmetric ciphers are supported. For more details, see appropriate
 subpackages.
 
 """
+
+from .build import initialize_libressl
+initialize_libressl()

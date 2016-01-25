@@ -8,9 +8,6 @@ int cipher_encrypt(EVP_CIPHER* cipher, unsigned char* data, int data_len, unsign
                    unsigned char* iv, unsigned char* enc_data,
                    int* enc_data_len, char* error_string, size_t error_string_len)
 {
-    OpenSSL_add_all_algorithms();
-    ERR_load_crypto_strings();
-
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
         report_error(error_string, error_string_len);
@@ -30,7 +27,6 @@ int cipher_encrypt(EVP_CIPHER* cipher, unsigned char* data, int data_len, unsign
     *enc_data_len = enc_len;
 
     EVP_CIPHER_CTX_free(cipher_ctx);
-    EVP_cleanup();
 
     return 1;
 
@@ -43,9 +39,6 @@ int cipher_decrypt(EVP_CIPHER* cipher, unsigned char* enc_data, int enc_data_len
                    unsigned char* key, unsigned char* iv,
                    unsigned char* data, int* data_len, char* error_string, size_t error_string_len)
 {
-    OpenSSL_add_all_algorithms();
-    ERR_load_crypto_strings();
-
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
         report_error(error_string, error_string_len);
@@ -71,7 +64,6 @@ int cipher_decrypt(EVP_CIPHER* cipher, unsigned char* enc_data, int enc_data_len
     *data_len = dec_data_len;
 
     EVP_CIPHER_CTX_free(cipher_ctx);
-    EVP_cleanup();
 
     return 1;
 
@@ -91,9 +83,6 @@ int cipher_aead_encrypt(EVP_CIPHER* cipher,
                        unsigned char* aad, int aad_len,
                        char* error_string, size_t error_string_len)
 {
-    OpenSSL_add_all_algorithms();
-    ERR_load_crypto_strings();
-
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
         report_error(error_string, error_string_len);
@@ -135,7 +124,6 @@ int cipher_aead_encrypt(EVP_CIPHER* cipher,
     }
 
     EVP_CIPHER_CTX_free(cipher_ctx);
-    EVP_cleanup();
 
     return 1;
 
@@ -152,9 +140,6 @@ int cipher_aead_decrypt(EVP_CIPHER* cipher,
                        unsigned char* aad, int aad_len,
                        char* error_string, size_t error_string_len)
 {
-    OpenSSL_add_all_algorithms();
-    ERR_load_crypto_strings();
-
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
         report_error(error_string, error_string_len);
@@ -201,7 +186,6 @@ int cipher_aead_decrypt(EVP_CIPHER* cipher,
     *data_len = dec_data_len;
 
     EVP_CIPHER_CTX_free(cipher_ctx);
-    EVP_cleanup();
 
     return 1;
 

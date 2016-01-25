@@ -1,4 +1,5 @@
 import os
+import cffi
 
 TOPLEVEL_PACKAGE_PATH = os.path.abspath(os.path.dirname(__file__))
 LIBRARIES = ['crypto']
@@ -39,3 +40,23 @@ def configure_ffi(ffi, package_name, cdef):
                    include_dirs=INCLUDE_DIRS, sources=source_files,
                    extra_compile_args=EXTRA_COMPILE_ARGS,
                    extra_link_args=EXTRA_LINK_ARGS)
+
+# Build auxiliary initialization module
+ffi = cffi.FFI()
+ffi.cdef('void initialize_libressl(void);')
+ffi.set_source('cryptomodule._aux', '#include "cryptomodule_lib.h"',
+               libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
+               include_dirs=INCLUDE_DIRS,
+               sources=('cryptomodule/cryptomodule_lib.c',),
+               extra_compile_args=EXTRA_COMPILE_ARGS,
+               extra_link_args=EXTRA_LINK_ARGS)
+
+def initialize_libressl():
+    try:
+        from . import _aux
+        _aux.lib.initialize_libressl()
+    except ImportError:    # pretend that we want just to compile
+        pass
+
+if __name__ == '__main__':
+    ffi.compile()

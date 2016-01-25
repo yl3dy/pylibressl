@@ -2,14 +2,11 @@
 
 const EVP_MD* digest_id_init(const char* name)
 {
-    OpenSSL_add_all_digests();
     return EVP_get_digestbyname(name);
 }
 
 EVP_MD_CTX* digest_init(const EVP_MD* hash_id)
 {
-    ERR_load_crypto_strings();
-
     EVP_MD_CTX* digest_ctx = EVP_MD_CTX_create();
     if(!digest_ctx) {
         ERR_print_errors_fp(stderr);
@@ -27,7 +24,6 @@ EVP_MD_CTX* digest_init(const EVP_MD* hash_id)
 void digest_teardown(EVP_MD_CTX* digest_ctx)
 {
     EVP_MD_CTX_destroy(digest_ctx);
-    EVP_cleanup();
 }
 
 int digest_update(EVP_MD_CTX* digest_ctx, const char* msg, unsigned int msg_len)
