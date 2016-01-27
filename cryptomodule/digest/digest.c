@@ -25,6 +25,7 @@ int digest(EVP_MD* digest_id,
         goto err;
     }
 
+    EVP_MD_CTX_destroy(digest_ctx);
     return 1;
 
 err:

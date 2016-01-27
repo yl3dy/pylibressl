@@ -167,6 +167,20 @@ class GenericCipherTest:
         with pytest.raises(ValueError):
             cipher = self.CIPHER_CLASS.new(bad_key, bad_iv, bad_mode)
 
+    def test_input_types_aead(self):
+        self.setup_key_iv()
+        bad_aad = 'asdfasdfsdf'
+        bad_tag = 42
+
+        for mode in self.MODES:
+            if mode not in self.AEAD_MODES: break
+
+            cipher = self.CIPHER_CLASS.new(self.good_key, self.good_iv, mode)
+            with pytest.raises(ValueError):
+                cipher.encrypt(self.good_string, bad_aad)
+            with pytest.raises(ValueError):
+                cipher.decrypt(self.good_string, bad_tag)
+
 
 class TestGOST89(GenericCipherTest):
     CIPHER_CLASS = GOST89

@@ -1,4 +1,3 @@
-import warnings
 try:
     from . import _cipher
 except ImportError:
@@ -64,6 +63,8 @@ class _Cipher(object):
     def _encrypt_gcm(self, data, **kwargs):
         ffi = _cipher.ffi
         aad = kwargs.get('aad')
+        if aad != None and type(aad) != type(b''):
+            raise ValueError('AAD should be a byte string')
 
         c_data = ffi.new('const char[]', data)
         c_key = ffi.new('unsigned char[]', self._key)
@@ -91,6 +92,9 @@ class _Cipher(object):
         return encrypted_data, tag
 
     def encrypt(self, data, **kwargs):
+        if type(data) != type(b''):
+            raise ValueError('Data should be a byte string')
+
         if self.MODE == MODE_GCM:
             return self._encrypt_gcm(data, **kwargs)
         else:
@@ -122,6 +126,11 @@ class _Cipher(object):
         ffi = _cipher.ffi
         aad = kwargs.get('aad')
 
+        if aad != None and type(aad) != type(b''):
+            raise ValueError('AAD should be a byte string')
+        if type(tag) != type(b''):
+            raise ValueError('Tag should be a byte string')
+
         c_enc_data = ffi.new('unsigned char[]', data)
         c_key = ffi.new('unsigned char[]', self._key)
         c_iv = ffi.new('unsigned char[]', self._iv)
@@ -149,6 +158,9 @@ class _Cipher(object):
         return decrypted_data
 
     def decrypt(self, data, *args, **kwargs):
+        if type(data) != type(b''):
+            raise ValueError('Data should be a byte string')
+
         if self.MODE == MODE_GCM:
             tag = args[0]
             return self._decrypt_gcm(data, tag, **kwargs)
