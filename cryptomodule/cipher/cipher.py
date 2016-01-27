@@ -15,8 +15,6 @@ MODE_CBC = 3
 class _Cipher(object):
     """Generic cipher object."""
 
-    _ERROR_MSG_LENGTH = 256
-
     @classmethod
     def new(cls, key, iv, mode):
         """Create new cipher object."""
@@ -40,18 +38,6 @@ class _Cipher(object):
         self.MODES = tuple(self._CIPHER_IDS.keys())
         self._AEAD_TAG_SIZE = _cipher.lib.AEAD_TAG_SIZE
 
-    def _report_library_error(self, c_err_msg):
-        err_msg = _cipher.ffi.string(c_err_msg)
-
-        # Usually, we don't want to see some weird characters from EBDIC.
-        # Still, if there are bytes from range 128-255, then report as a byte
-        # string.
-        try:
-            err_msg = err_msg.decode('ascii')
-        except UnicodeDecodeError:
-            pass
-        return err_msg
-
 
     def _encrypt(self, data):
         ffi = _cipher.ffi
@@ -61,15 +47,15 @@ class _Cipher(object):
         c_iv = ffi.new('unsigned char[]', self._iv)
         c_enc_data = ffi.new('unsigned char[]', 2*len(data))
         c_enc_data_len = ffi.new('int *')
-        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
+        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_encrypt(self._CIPHER_ID, c_data, len(data),
                                             c_key, c_iv, c_enc_data,
                                             c_enc_data_len, c_err_msg,
-                                            self._ERROR_MSG_LENGTH)
+                                            lib.ERROR_MSG_LENGTH)
 
         if not status:
-            err_msg = self._report_library_error(c_err_msg)
+            err_msg = lib.report_libressl_error(ffi, c_err_msg)
             raise LibreSSLError(err_msg)
 
         encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
@@ -87,17 +73,17 @@ class _Cipher(object):
         c_tag = ffi.new('unsigned char[]', self._AEAD_TAG_SIZE)
         c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
         aad_len = len(aad) if aad else 0
-        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
+        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_aead_encrypt(self._CIPHER_ID, c_data,
                                                  len(data), c_key, c_iv,
                                                  c_enc_data, c_enc_data_len,
                                                  c_tag, c_aad, aad_len,
                                                  c_err_msg,
-                                                 self._ERROR_MSG_LENGTH)
+                                                 lib.ERROR_MSG_LENGTH)
 
         if not status:
-            err_msg = self._report_library_error(c_err_msg)
+            err_msg = lib.report_libressl_error(ffi, c_err_msg)
             raise LibreSSLError(err_msg)
 
         encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
@@ -119,14 +105,14 @@ class _Cipher(object):
         c_iv = ffi.new('unsigned char[]', self._iv)
         c_dec_data = ffi.new('unsigned char[]', len(data))
         c_dec_data_len = ffi.new('int*')
-        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
+        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_decrypt(self._CIPHER_ID, c_enc_data,
                                             len(data), c_key, c_iv, c_dec_data,
                                             c_dec_data_len, c_err_msg,
-                                            self._ERROR_MSG_LENGTH)
+                                            lib.ERROR_MSG_LENGTH)
         if not status:
-            err_msg = self._report_library_error(c_err_msg)
+            err_msg = lib.report_libressl_error(ffi,c_err_msg)
             raise LibreSSLError(err_msg)
 
         decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])
@@ -144,19 +130,19 @@ class _Cipher(object):
         c_tag = ffi.new('unsigned char[]', tag)
         c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
         aad_len = len(aad) if aad else 0
-        c_err_msg = ffi.new('char[]', self._ERROR_MSG_LENGTH)
+        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_aead_decrypt(self._CIPHER_ID, c_enc_data,
                                                  len(data), c_key, c_iv,
                                                  c_dec_data, c_dec_data_len,
                                                  c_tag, c_aad, aad_len,
                                                  c_err_msg,
-                                                 self._ERROR_MSG_LENGTH)
+                                                 lib.ERROR_MSG_LENGTH)
 
         if not status:
             if status == -1:
                 raise AuthencityError('Cannot decrypt message: is not authentic')
-            err_msg = self._report_library_error(c_err_msg)
+            err_msg = lib.report_libressl_error(ffi, c_err_msg)
             raise LibreSSLError(err_msg)
 
         decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])

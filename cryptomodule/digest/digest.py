@@ -1,9 +1,7 @@
-import warnings
 try:
     from . import _digest
 except ImportError:
-    warnings.warn('Digest C module not compiled', RuntimeWarning)
-    _digest = None
+    raise ImportError('Digest C module not compiled')
 
 import cryptomodule.lib as lib
 from cryptomodule.exceptions import *
@@ -16,77 +14,59 @@ class _Hash(object):
 
     """
 
-    HASH_NAME = ''
+    # Cdata containing EVP_MD digest identifier. Children should set this value
+    # to an appropriate one.
+    _HASH_ID = None
+    # Maximum LibreSSL hash size. Not optimal, but the size is not very big
+    # anyway.
+    _MAX_HASH_SIZE = _digest.lib.EVP_MAX_MD_SIZE_c
 
     @classmethod
     def new(cls, data=None):
         """Create new hash instance."""
-        if not _digest:
-            raise RuntimeError("Can't create hash object: digest module not compiled")
-
         hash = cls()
         if data:
             hash.update(data)
         return hash
 
     def __init__(self):
-        ffi = _digest.ffi
-
-        if self.HASH_NAME:
-            c_digest_id = _digest.lib.digest_id_init(self.HASH_NAME.encode('ascii'))
-            if c_digest_id == ffi.NULL:
-                raise ValueError('Hash name is invalid. This is likely a bug in cryptomodule')
-        else:
-            raise ValueError('Hash name was not set. This is likely a bug in cryptomodule')
-
-        self.c_digest_ctx = ffi.gc(_digest.lib.digest_init(c_digest_id),
-                                   _digest.lib.digest_teardown)
-        if self.c_digest_ctx == ffi.NULL:
-            raise HashError('Could not initialize hash')
-
-        self._finalize_called = False
+        self._msg = b''
 
     def update(self, data):
-        """Append more data to digest.
-
-        Note that you can't call this method after calling digest().
-
-        """
+        """Append more data to digest."""
         if type(data) != type(b''):
             raise ValueError('Data should be a binary string')
-        if self._finalize_called:
-            raise RuntimeError('Could not update hash: already finalized')
-        c_data = _digest.ffi.new('const char[]', data)
-        data_len = len(data)
-        status = _digest.lib.digest_update(self.c_digest_ctx, c_data,
-                                             data_len)
-        if not status:
-            raise HashError('Could not update hash')
+        self._msg += data
 
     def digest(self):
         """Show digest as a byte string."""
-        if self._finalize_called:
-            return self._digest_value
-        else:
-            ffi = _digest.ffi
-            c_digest = ffi.new('unsigned char[]', 1024)   # FIXME
-            c_digest_len = ffi.new('unsigned int*')
+        ffi = _digest.ffi
 
-            status = _digest.lib.digest_final(self.c_digest_ctx, c_digest,
-                                                c_digest_len)
-            if not status:
-                raise HashError('Could not finalize hash')
+        c_msg = ffi.new('unsigned char[]', self._msg)
+        c_digest = ffi.new('unsigned char[]', self._MAX_HASH_SIZE)
+        c_digest_len = ffi.new('unsigned int*')
+        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
-            self._digest_value = lib.retrieve_bytes(ffi, c_digest, c_digest_len[0])
-            self._finalize_called = True
+        status = _digest.lib.digest(self._HASH_ID, c_msg, len(self._msg),
+                                    c_digest, c_digest_len, c_err_msg,
+                                    lib.ERROR_MSG_LENGTH)
 
-            return self._digest_value
+        if not status:
+            err_msg = lib.report_libressl_error(ffi, c_err_msg)
+            raise LibreSSLError(err_msg)
+
+        digest_value = lib.retrieve_bytes(ffi, c_digest, c_digest_len[0])
+
+        # should save _msg till the end to help debugging library errors
+        self._msg = b''
+
+        return digest_value
 
 
 class Streebog512(_Hash):
     """Streebog (GOST R 34.11.2012) hash."""
-    HASH_NAME = 'streebog512'
+    _HASH_ID = _digest.lib.EVP_streebog512()
 
 class SHA512(_Hash):
     """SHA512 hash."""
-    HASH_NAME = 'sha512'
+    _HASH_ID = _digest.lib.EVP_sha512()

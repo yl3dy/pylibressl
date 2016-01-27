@@ -37,6 +37,18 @@ class GenericHashTest:
         hash = self.HASH_CLASS.new(self.GOOD_STRING).digest()
         assert hash == self.GOOD_HASH
 
+    def test_append_data(self):
+        good_string_2 = b'lorem ipsum \x12\xfa'
+        good_string_long = self.GOOD_STRING + good_string_2
+
+        hash_long = self.HASH_CLASS.new(good_string_long).digest()
+
+        hash_inst = self.HASH_CLASS.new(self.GOOD_STRING)
+        hash_inst.update(good_string_2)
+        hash_seq = hash_inst.digest()
+
+        assert hash_long == hash_seq
+
 class TestStreebog512(GenericHashTest):
     HASH_CLASS = dgst.Streebog512
     HASH_LENGTH = 64

@@ -4,8 +4,10 @@
 #include <openssl/err.h>
 #include "cryptomodule_lib.h"
 
-extern const EVP_MD* digest_id_init(const char* name);
-extern EVP_MD_CTX* digest_init(const EVP_MD* hash_id);
-extern void digest_teardown(EVP_MD_CTX* digest_ctx);
-extern int digest_update(EVP_MD_CTX* digest_ctx, const char* msg, unsigned int msg_len);
-extern int digest_final(EVP_MD_CTX* digest_ctx, unsigned char* digest, unsigned int* digest_len);
+// Wrapper for #define EVP_MAX_MD_SIZE
+extern const int EVP_MAX_MD_SIZE_c;
+
+extern int digest(EVP_MD* digest_id,
+                  unsigned char* msg, unsigned int msg_len,
+                  unsigned char* digest, unsigned int* digest_len,
+                  char* error_string, size_t error_string_len);
