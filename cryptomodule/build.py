@@ -1,3 +1,12 @@
+"""
+Some building machinery for the cryptomodule.
+
+Defines building options and convenience building functions. Also registers
+common C module with FFI (all other library sections depend on this module!).
+To build the module manually, just run this file like `PYTHONPATH='.'
+cryptomodule/build.py`.
+
+"""
 import os
 import cffi
 
@@ -21,7 +30,7 @@ def configure_ffi(ffi, package_name, cdef):
     """Configure FFI object using default settings.
 
     Assume that the main header is {package_name}.h and grab all C source files
-    in package directory.
+    in package directory plus common sources (`cryptomodule_lib.c`).
     """
     join = os.path.join   # just a shorthand
 

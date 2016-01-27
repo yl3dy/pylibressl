@@ -1,9 +1,7 @@
-class HashError(Exception):
-    pass
+"""
+Cryptomodule exceptions
 
-class CipherError(Exception):
-    pass
-
+"""
 class AuthencityError(Exception):
     pass
 

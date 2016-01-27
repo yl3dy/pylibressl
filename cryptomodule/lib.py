@@ -1,3 +1,9 @@
+"""
+Various auxiliary routines
+
+NB: intended only for internal use!
+
+"""
 ERROR_MSG_LENGTH = 256     # should be >= 120 !
 
 def report_libressl_error(ffi, c_err_msg):

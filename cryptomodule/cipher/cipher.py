@@ -92,6 +92,13 @@ class _Cipher(object):
         return encrypted_data, tag
 
     def encrypt(self, data, **kwargs):
+        """Encrypt a message.
+
+        :param data: data to encrypt as a byte string
+        :param **kwargs: additional options, `aad` - AAD data for GCM mode
+        :return: encrypted message and (if GCM mode) tag as byte strings
+
+        """
         if type(data) != type(b''):
             raise ValueError('Data should be a byte string')
 
@@ -158,6 +165,14 @@ class _Cipher(object):
         return decrypted_data
 
     def decrypt(self, data, *args, **kwargs):
+        """Encrypt a message.
+
+        :param data: data to encrypt as a byte string
+        :param *args: (if GCM mode) tag value
+        :param **kwargs: additional options, `aad` - AAD data for GCM mode
+        :return: decrypted message
+
+        """
         if type(data) != type(b''):
             raise ValueError('Data should be a byte string')
 
