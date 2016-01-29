@@ -19,7 +19,7 @@ class _Hash(object):
     _HASH_ID = None
     # Maximum LibreSSL hash size. Not optimal, but the size is not very big
     # anyway.
-    _MAX_HASH_SIZE = _digest.lib.EVP_MAX_MD_SIZE_c
+    _MAX_HASH_SIZE = _digest.lib.EVP_MAX_MD_SIZE
 
     @classmethod
     def new(cls, data=None):

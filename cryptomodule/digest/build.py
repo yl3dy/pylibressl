@@ -3,7 +3,7 @@ import cffi
 
 cdef = """
 typedef ... EVP_MD;
-const int EVP_MAX_MD_SIZE_c;
+#define EVP_MAX_MD_SIZE ...
 
 const EVP_MD* EVP_streebog512(void);
 const EVP_MD* EVP_sha512(void);

@@ -1,7 +1,5 @@
 #include "digest.h"
 
-const int EVP_MAX_MD_SIZE_c = EVP_MAX_MD_SIZE;
-
 int digest(EVP_MD* digest_id,
            unsigned char* msg, unsigned int msg_len,
            unsigned char* digest, unsigned int* digest_len,
