@@ -26,7 +26,7 @@ int hmac_verify(const EVP_MD* digest_id,
 """
 
 ffi = cffi.FFI()
-core_build.configure_ffi(ffi, 'sign', cdef)
+core_build.configure_ffi(ffi, 'mac', cdef)
 
 if __name__ == '__main__':
     ffi.compile()

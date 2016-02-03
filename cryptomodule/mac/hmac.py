@@ -1,5 +1,5 @@
 try:
-    from . import _sign
+    from . import _mac
 except ImportError:
     raise ImportError('Signing and MAC C module not compiled')
 
@@ -21,16 +21,16 @@ class _HMAC(object):
         return mac
 
     def __init__(self, private_key):
-        ffi = _sign.ffi
+        ffi = _mac.ffi
 
         c_private_key = ffi.new('unsigned char[]', private_key)
         c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
-        self._c_pkey = ffi.gc(_sign.lib.pkey_hmac_init(c_private_key,
-                                                       len(private_key),
-                                                       c_err_msg,
-                                                       lib.ERROR_MSG_LENGTH),
-                              _sign.lib.EVP_PKEY_free)
+        self._c_pkey = ffi.gc(_mac.lib.pkey_hmac_init(c_private_key,
+                                                      len(private_key),
+                                                      c_err_msg,
+                                                      lib.ERROR_MSG_LENGTH),
+                              _mac.lib.EVP_PKEY_free)
         if self._c_pkey == ffi.NULL:
             err_msg = lib.report_libressl_error(ffi, c_err_msg)
             raise LibreSSLError(err_msg)
@@ -41,16 +41,16 @@ class _HMAC(object):
         if type(data) != type(b''):
             raise ValueError('Data should be a byte string')
 
-        ffi = _sign.ffi
+        ffi = _mac.ffi
 
         c_msg = ffi.new('unsigned char[]', data)
         c_signature = ffi.new('unsigned char[]', self._DIGEST_LENGTH)
         c_sign_len = ffi.new('size_t *')
         c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
-        status = _sign.lib.hmac_sign(self._DIGEST, c_msg, len(data),
-                                     c_signature, c_sign_len, self._c_pkey,
-                                     c_err_msg, lib.ERROR_MSG_LENGTH)
+        status = _mac.lib.hmac_sign(self._DIGEST, c_msg, len(data),
+                                    c_signature, c_sign_len, self._c_pkey,
+                                    c_err_msg, lib.ERROR_MSG_LENGTH)
         if not status:
             err_msg = lib.report_libressl_error(ffi, c_err_msg)
             raise LibreSSLError(err_msg)
@@ -67,13 +67,13 @@ class _HMAC(object):
         if type(auth_code) != type(b''):
             raise ValueError('MAC should be a byte string')
 
-        ffi = _sign.ffi
+        ffi = _mac.ffi
 
         c_msg = ffi.new('unsigned char[]', data)
         c_signature = ffi.new('unsigned char[]', auth_code)
         c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
-        status = _sign.lib.hmac_verify(self._DIGEST, c_msg, len(data),
+        status = _mac.lib.hmac_verify(self._DIGEST, c_msg, len(data),
                                        c_signature, len(auth_code), self._c_pkey,
                                        c_err_msg, lib.ERROR_MSG_LENGTH)
 
@@ -89,5 +89,5 @@ class _HMAC(object):
 
 class HMACStreebog512(_HMAC):
     """HMAC-Streebog512"""
-    _DIGEST = _sign.lib.EVP_streebog512()
+    _DIGEST = _mac.lib.EVP_streebog512()
     _DIGEST_LENGTH = 64

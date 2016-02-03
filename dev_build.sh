@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGES="digest cipher sign"
+PACKAGES="digest cipher mac"
 
 echo '### Building core aux module'
 PYTHONPATH='.' python3 cryptomodule/build.py

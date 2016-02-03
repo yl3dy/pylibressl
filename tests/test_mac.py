@@ -1,5 +1,5 @@
 import pytest
-from cryptomodule.sign import HMACStreebog512
+from cryptomodule.mac import HMACStreebog512
 from cryptomodule.exceptions import AuthencityError, LibreSSLError
 
 class GenericHMACTest:

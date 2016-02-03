@@ -1,4 +1,4 @@
-#include "sign.h"
+#include "mac.h"
 
 EVP_PKEY* pkey_hmac_init(unsigned char* private_key, int private_key_len, char* error_string, int error_string_len)
 {
