@@ -1,9 +1,14 @@
 """
 Cryptomodule for Ghostbox.
 
-Contains many cryptographic primitives for usage in Ghostbox. Currently only some
-digests and symmetric ciphers are supported. For more details, see appropriate
-subpackages.
+Contains many cryptographic primitives for usage in Ghostbox. Specifically:
+
+    * `digest` -- various hash functions
+    * `cipher` -- symmetric ciphers
+    * `mac` -- Message Authentication Codes
+    * `rsa` -- RSA operations (sign/verify)
+
+For more details, see appropriate subpackages.
 
 """
 
