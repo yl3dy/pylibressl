@@ -138,3 +138,83 @@ cleanup:
 
     return 0;
 }
+
+int rsa_encrypt(unsigned char* msg, size_t msg_len,
+                EVP_PKEY* pkey, unsigned char* iv,
+                EVP_CIPHER* cipher_id,
+                unsigned char* session_key, size_t* session_key_len,
+                unsigned char* enc_msg, size_t* enc_msg_len)
+{
+    EVP_PKEY* pkeys[] = { pkey };
+    unsigned char* sess_keys[] = { session_key };
+
+    EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+    if(!cipher_ctx) {
+        goto cleanup;
+    }
+
+    int skl;
+    if(1 != EVP_SealInit(cipher_ctx, cipher_id, sess_keys, &skl, iv, pkeys, 1)) {
+        goto cleanup;
+    }
+    *session_key_len = skl;
+
+    int len;
+    if(1 != EVP_SealUpdate(cipher_ctx, enc_msg, &len, msg, msg_len)) {
+        goto cleanup;
+    }
+
+    *enc_msg_len = len;
+    if(1 != EVP_SealFinal(cipher_ctx, enc_msg, &len)) {
+        goto cleanup;
+    }
+    *enc_msg_len += len;
+
+    EVP_CIPHER_CTX_free(cipher_ctx);
+    return 1;
+
+cleanup:
+    if(!cipher_ctx) {
+        EVP_CIPHER_CTX_free(cipher_ctx);
+    }
+
+    return 0;
+}
+
+int rsa_decrypt(unsigned char* enc_msg, size_t enc_msg_len,
+                EVP_PKEY* pkey, unsigned char* iv,
+                EVP_CIPHER* cipher_id,
+                unsigned char* session_key, size_t session_key_len,
+                unsigned char* msg, size_t* msg_len)
+{
+    EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
+    if(!cipher_ctx) {
+        goto cleanup;
+    }
+
+    if(1 != EVP_OpenInit(cipher_ctx, cipher_id, session_key, session_key_len, iv, pkey)) {
+        goto cleanup;
+    }
+
+    int len;
+    if(1 != EVP_OpenUpdate(cipher_ctx, msg, &len, enc_msg, enc_msg_len)) {
+        goto cleanup;
+    }
+
+    *msg_len = len;
+    if(1 != EVP_OpenFinal(cipher_ctx, msg, &len)) {
+        goto cleanup;
+    }
+    *msg_len += len;
+
+    EVP_CIPHER_CTX_free(cipher_ctx);
+    return 1;
+
+cleanup:
+    if(!cipher_ctx) {
+        EVP_CIPHER_CTX_free(cipher_ctx);
+    }
+
+    return 0;
+}
+

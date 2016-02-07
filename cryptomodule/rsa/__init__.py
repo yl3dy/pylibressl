@@ -22,6 +22,6 @@ Example:
 
 """
 
-from .rsa import RSAKeypair, RSASignVerify
+from .rsa import RSAKeypair, RSASignVerify, RSACrypt
 
-__all__ = ['RSAKeypair', 'RSASignVerify']
+__all__ = ['RSAKeypair', 'RSASignVerify', 'RSACrypt']

@@ -5,6 +5,7 @@ except ImportError:
 
 import cryptomodule.lib as lib
 from cryptomodule.exceptions import *
+from cryptomodule.cipher.cipher import _Cipher
 
 class RSAKeypair(object):
     """RSA keypair container."""
@@ -41,8 +42,11 @@ class RSAKeypair(object):
 
 
 class RSASignVerify(object):
+    """RSA signing class."""
+
     @classmethod
     def new(cls, rsa_keypair):
+        """Create new RSA signing object."""
         if not isinstance(rsa_keypair, RSAKeypair):
             raise ValueError('Keypair should be RSAKeypair instance')
 
@@ -92,3 +96,85 @@ class RSASignVerify(object):
             return False
         else:
             raise LibreSSLError(lib.get_libressl_error(ffi, _rsa.lib))
+
+
+
+class RSACrypt(object):
+    """RSA en/decryption class."""
+
+    @classmethod
+    def new(cls, keypair, symmetric_cipher=None):
+        """Create new en/decryption object.
+
+        NB! Setting custom symmetric cipher is not supported yet, AES256-CTR is
+        hardcoded.
+
+        """
+        if not isinstance(keypair, RSAKeypair):
+            raise ValueError('Keypair should be RSAKeypair instance')
+
+        rsacrypt = cls(keypair)
+        return rsacrypt
+
+    def __init__(self, keypair):
+        self._keypair = keypair
+
+    def encrypt(self, data):
+        if type(data) != type(b''):
+            raise ValueError('Data should be a byte string')
+
+        ffi = _rsa.ffi
+
+        c_msg = ffi.new('unsigned char[]', data)
+        c_msg_len = len(data)
+        c_session_key = ffi.new('unsigned char[]', 1024)
+        c_session_key_len = ffi.new('size_t*')
+        c_iv = ffi.new('unsigned char[]', 16)
+        c_enc_msg = ffi.new('unsigned char[]', 2*c_msg_len)
+        c_enc_msg_len = ffi.new('size_t*')
+        c_cipher_id = _rsa.lib.EVP_aes_256_ctr()   # TODO
+        c_pkey = self._keypair._pkey
+
+        status = _rsa.lib.rsa_encrypt(c_msg, c_msg_len, c_pkey,
+                                      c_iv, c_cipher_id, c_session_key,
+                                      c_session_key_len, c_enc_msg,
+                                      c_enc_msg_len)
+
+        if not status:
+            raise LibreSSLError(lib.get_libressl_error(ffi, _rsa.lib))
+
+        session_key = lib.retrieve_bytes(ffi, c_session_key,
+                                         c_session_key_len[0])
+        encoded_msg = lib.retrieve_bytes(ffi, c_enc_msg, c_enc_msg_len[0])
+        iv = lib.retrieve_bytes(ffi, c_iv, 16)
+
+        return encoded_msg, session_key, iv
+
+    def decrypt(self, data, session_key, iv):
+        if type(data) != type(b''):
+            raise ValueError('Data should be a byte string')
+        if type(session_key) != type(b''):
+            raise ValueError('Session key should be a byte string')
+
+        ffi = _rsa.ffi
+
+        c_enc_msg = ffi.new('unsigned char[]', data)
+        c_enc_msg_len = len(data)
+        c_session_key = ffi.new('unsigned char[]', session_key)
+        c_session_key_len = len(session_key)
+        c_iv = ffi.new('unsigned char[]', iv)
+        c_msg = ffi.new('unsigned char[]', 2*c_enc_msg_len)
+        c_msg_len = ffi.new('size_t*')
+        c_cipher_id = _rsa.lib.EVP_aes_256_ctr()   # TODO
+
+        status = _rsa.lib.rsa_decrypt(c_enc_msg, c_enc_msg_len,
+                                      self._keypair._pkey, c_iv,
+                                      c_cipher_id, c_session_key,
+                                      c_session_key_len, c_msg, c_msg_len)
+
+        if not status:
+            raise LibreSSLError(lib.get_libressl_error(ffi, _rsa.lib))
+
+        decoded_msg = lib.retrieve_bytes(ffi, c_msg, c_msg_len[0])
+
+        return decoded_msg

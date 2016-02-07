@@ -1,4 +1,5 @@
 import cryptomodule.rsa as rsa
+import cryptomodule.cipher as cipher
 from cryptomodule.exceptions import *
 import pytest
 import os
@@ -93,3 +94,24 @@ class TestRSASignVerify:
         signature = signer.sign(self.good_message)
         bad_signature = signature[3:]
         assert not signer.verify(self.good_message, bad_signature)
+
+
+class TestRSACrypt:
+    good_msg = b'Some message to asymmetrically encrypt. 1234567890'
+    private_key = open(os.path.join(TEST_PATH, 'rsa_private.pem'), 'rb').read()
+    public_key = open(os.path.join(TEST_PATH, 'rsa_public.pem'), 'rb').read()
+
+    def test_encrypt_decrypt(self):
+        kp = rsa.RSAKeypair(private_key=self.private_key)
+        rsacrypt = rsa.RSACrypt.new(kp)
+        enc_msg, sess_key, iv = rsacrypt.encrypt(self.good_msg)
+        dec_msg = rsacrypt.decrypt(enc_msg, sess_key, iv)
+        assert dec_msg == self.good_msg
+
+    def test_tampered_session_key(self):
+        kp = rsa.RSAKeypair(private_key=self.private_key)
+        rsacrypt = rsa.RSACrypt.new(kp)
+        enc_msg, sess_key, iv = rsacrypt.encrypt(self.good_msg)
+        bad_sess_key = sess_key[1:]
+        with pytest.raises(LibreSSLError):
+            dec_msg = rsacrypt.decrypt(enc_msg, bad_sess_key, iv)
