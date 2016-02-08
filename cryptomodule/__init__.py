@@ -7,6 +7,7 @@ Contains many cryptographic primitives for usage in Ghostbox. Specifically:
     * `cipher` -- symmetric ciphers
     * `mac` -- Message Authentication Codes
     * `rsa` -- RSA operations (sign/verify)
+    * `kdf` -- key derivation algorithms
 
 For more details, see appropriate subpackages.
 

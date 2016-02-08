@@ -4,10 +4,11 @@ Various auxiliary routines
 NB: intended only for internal use!
 
 """
-ERROR_MSG_LENGTH = 256     # should be >= 120 !
 
-def report_libressl_error(ffi, c_err_msg):
-    """Represent LibreSSL error as a string."""
+def get_libressl_error(ffi, lib):
+    """Report LibreSSL error w/o passing a string."""
+    c_errno = lib.ERR_get_error()
+    c_err_msg = lib.ERR_error_string(c_errno, ffi.NULL)
     err_msg = ffi.string(c_err_msg)
 
     # Usually, we don't want to see some weird characters from EBDIC.
@@ -18,12 +19,6 @@ def report_libressl_error(ffi, c_err_msg):
     except UnicodeDecodeError:
         pass
     return err_msg
-
-def get_libressl_error(ffi, lib):
-    """Report LibreSSL error w/o passing a string."""
-    errno = lib.ERR_get_error()
-    c_err_msg = lib.ERR_error_string(errno, ffi.NULL)
-    return report_libressl_error(ffi, c_err_msg)
 
 def retrieve_bytes(ffi, cdata, size):
     """Retrieve byte string from cdata."""

@@ -46,16 +46,13 @@ class _Cipher(object):
         c_iv = ffi.new('unsigned char[]', self._iv)
         c_enc_data = ffi.new('unsigned char[]', 2*len(data))
         c_enc_data_len = ffi.new('int *')
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_encrypt(self._CIPHER_ID, c_data, len(data),
                                             c_key, c_iv, c_enc_data,
-                                            c_enc_data_len, c_err_msg,
-                                            lib.ERROR_MSG_LENGTH)
+                                            c_enc_data_len)
 
         if not status:
-            err_msg = lib.report_libressl_error(ffi, c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
 
         encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
         return encrypted_data
@@ -74,18 +71,14 @@ class _Cipher(object):
         c_tag = ffi.new('unsigned char[]', self._AEAD_TAG_SIZE)
         c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
         aad_len = len(aad) if aad else 0
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_aead_encrypt(self._CIPHER_ID, c_data,
                                                  len(data), c_key, c_iv,
                                                  c_enc_data, c_enc_data_len,
-                                                 c_tag, c_aad, aad_len,
-                                                 c_err_msg,
-                                                 lib.ERROR_MSG_LENGTH)
+                                                 c_tag, c_aad, aad_len)
 
         if not status:
-            err_msg = lib.report_libressl_error(ffi, c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
 
         encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
         tag = lib.retrieve_bytes(_cipher.ffi, c_tag, self._AEAD_TAG_SIZE)
@@ -116,15 +109,12 @@ class _Cipher(object):
         c_iv = ffi.new('unsigned char[]', self._iv)
         c_dec_data = ffi.new('unsigned char[]', len(data))
         c_dec_data_len = ffi.new('int*')
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_decrypt(self._CIPHER_ID, c_enc_data,
                                             len(data), c_key, c_iv, c_dec_data,
-                                            c_dec_data_len, c_err_msg,
-                                            lib.ERROR_MSG_LENGTH)
+                                            c_dec_data_len)
         if not status:
-            err_msg = lib.report_libressl_error(ffi,c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
 
         decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])
         return decrypted_data
@@ -146,20 +136,16 @@ class _Cipher(object):
         c_tag = ffi.new('unsigned char[]', tag)
         c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
         aad_len = len(aad) if aad else 0
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _cipher.lib.cipher_aead_decrypt(self._CIPHER_ID, c_enc_data,
                                                  len(data), c_key, c_iv,
                                                  c_dec_data, c_dec_data_len,
-                                                 c_tag, c_aad, aad_len,
-                                                 c_err_msg,
-                                                 lib.ERROR_MSG_LENGTH)
+                                                 c_tag, c_aad, aad_len)
 
         if not status:
             if status == -1:
                 raise AuthencityError('Cannot decrypt message: is not authentic')
-            err_msg = lib.report_libressl_error(ffi, c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
 
         decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])
         return decrypted_data

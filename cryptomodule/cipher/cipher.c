@@ -6,12 +6,11 @@ const int AEAD_TAG_SIZE = 16;
 
 int cipher_encrypt(EVP_CIPHER* cipher, unsigned char* data, int data_len, unsigned char* key,
                    unsigned char* iv, unsigned char* enc_data,
-                   int* enc_data_len, char* error_string, size_t error_string_len)
+                   int* enc_data_len)
 {
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
-        report_error(error_string, error_string_len);
-        return 0;
+        goto cleanup;
     }
 
     if(1 != EVP_EncryptInit_ex(cipher_ctx, cipher, NULL, key, iv)) {
@@ -34,19 +33,19 @@ int cipher_encrypt(EVP_CIPHER* cipher, unsigned char* data, int data_len, unsign
     return 1;
 
 cleanup:
-    report_error(error_string, error_string_len);
-    EVP_CIPHER_CTX_free(cipher_ctx);
+    if(cipher_ctx) {
+        EVP_CIPHER_CTX_free(cipher_ctx);
+    }
     return 0;
 }
 
 int cipher_decrypt(EVP_CIPHER* cipher, unsigned char* enc_data, int enc_data_len,
                    unsigned char* key, unsigned char* iv,
-                   unsigned char* data, int* data_len, char* error_string, size_t error_string_len)
+                   unsigned char* data, int* data_len)
 {
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
-        report_error(error_string, error_string_len);
-        return 0;
+        goto cleanup;
     }
 
     if(1 != EVP_DecryptInit_ex(cipher_ctx, cipher, NULL, key, iv)) {
@@ -69,8 +68,9 @@ int cipher_decrypt(EVP_CIPHER* cipher, unsigned char* enc_data, int enc_data_len
     return 1;
 
 cleanup:
-    report_error(error_string, error_string_len);
-    EVP_CIPHER_CTX_free(cipher_ctx);
+    if(cipher_ctx) {
+        EVP_CIPHER_CTX_free(cipher_ctx);
+    }
     return 0;
 }
 
@@ -82,13 +82,11 @@ int cipher_aead_encrypt(EVP_CIPHER* cipher,
                        unsigned char* key, unsigned char* iv,
                        unsigned char* enc_data, int* enc_data_len,
                        unsigned char* tag,
-                       unsigned char* aad, int aad_len,
-                       char* error_string, size_t error_string_len)
+                       unsigned char* aad, int aad_len)
 {
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
-        report_error(error_string, error_string_len);
-        return 0;
+        goto cleanup;
     }
 
     if(1 != EVP_EncryptInit_ex(cipher_ctx, cipher, NULL, NULL, NULL)) {
@@ -125,8 +123,9 @@ int cipher_aead_encrypt(EVP_CIPHER* cipher,
     return 1;
 
 cleanup:
-    report_error(error_string, error_string_len);
-    EVP_CIPHER_CTX_free(cipher_ctx);
+    if(cipher_ctx) {
+        EVP_CIPHER_CTX_free(cipher_ctx);
+    }
     return 0;
 }
 
@@ -135,13 +134,11 @@ int cipher_aead_decrypt(EVP_CIPHER* cipher,
                        unsigned char* key, unsigned char* iv,
                        unsigned char* data, int* data_len,
                        unsigned char* tag,
-                       unsigned char* aad, int aad_len,
-                       char* error_string, size_t error_string_len)
+                       unsigned char* aad, int aad_len)
 {
     EVP_CIPHER_CTX* cipher_ctx = EVP_CIPHER_CTX_new();
     if(!cipher_ctx) {
-        report_error(error_string, error_string_len);
-        return 0;
+        goto cleanup;
     }
 
     if(!EVP_DecryptInit_ex(cipher_ctx, cipher, NULL, NULL, NULL)) {
@@ -182,7 +179,8 @@ int cipher_aead_decrypt(EVP_CIPHER* cipher,
     return 1;
 
 cleanup:
-    report_error(error_string, error_string_len);
-    EVP_CIPHER_CTX_free(cipher_ctx);
+    if(cipher_ctx) {
+        EVP_CIPHER_CTX_free(cipher_ctx);
+    }
     return 0;
 }

@@ -1,10 +1,9 @@
 #include "mac.h"
 
-EVP_PKEY* pkey_hmac_init(unsigned char* private_key, int private_key_len, char* error_string, int error_string_len)
+EVP_PKEY* pkey_hmac_init(unsigned char* private_key, int private_key_len)
 {
     EVP_PKEY* pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, private_key, private_key_len);
     if(!pkey) {
-        report_error(error_string, error_string_len);
         return NULL;
     }
     return pkey;
@@ -13,13 +12,11 @@ EVP_PKEY* pkey_hmac_init(unsigned char* private_key, int private_key_len, char* 
 int hmac_sign(const EVP_MD* digest_id,
               unsigned char* msg, size_t msg_len,
               unsigned char* signature, size_t* sign_len,
-              EVP_PKEY* pkey,
-              char* error_string, size_t error_string_len)
+              EVP_PKEY* pkey)
 {
     EVP_MD_CTX* digest_ctx = EVP_MD_CTX_create();
     if(!digest_ctx) {
-        report_error(error_string, error_string_len);
-        return 0;
+        goto cleanup;
     }
 
     if(1 != EVP_DigestInit_ex(digest_ctx, digest_id, NULL)) {
@@ -42,21 +39,21 @@ int hmac_sign(const EVP_MD* digest_id,
     return 1;
 
 cleanup:
-    report_error(error_string, error_string_len);
-    EVP_MD_CTX_destroy(digest_ctx);
+    if(digest_ctx) {
+        EVP_MD_CTX_destroy(digest_ctx);
+    }
     return 0;
 }
 
 int hmac_verify(const EVP_MD* digest_id,
                 unsigned char* msg, size_t msg_len,
                 unsigned char* signature, size_t sign_len,
-                EVP_PKEY* pkey,
-                char* error_string, size_t error_string_len)
+                EVP_PKEY* pkey)
 {
     unsigned char buf_mac[EVP_MAX_MD_SIZE];  // buffer for MAC to compare with
     size_t buf_mac_len;
 
-    if(!hmac_sign(digest_id, msg, msg_len, buf_mac, &buf_mac_len, pkey, error_string, error_string_len)) {
+    if(!hmac_sign(digest_id, msg, msg_len, buf_mac, &buf_mac_len, pkey)) {
         return 0;   // error message is already prepared
     }
 

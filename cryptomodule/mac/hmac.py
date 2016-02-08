@@ -24,16 +24,12 @@ class _HMAC(object):
         ffi = _mac.ffi
 
         c_private_key = ffi.new('unsigned char[]', private_key)
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         self._c_pkey = ffi.gc(_mac.lib.pkey_hmac_init(c_private_key,
-                                                      len(private_key),
-                                                      c_err_msg,
-                                                      lib.ERROR_MSG_LENGTH),
+                                                      len(private_key)),
                               _mac.lib.EVP_PKEY_free)
         if self._c_pkey == ffi.NULL:
-            err_msg = lib.report_libressl_error(ffi, c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _mac.lib))
 
     def sign(self, data):
         """Sign a message using HMAC."""
@@ -46,14 +42,11 @@ class _HMAC(object):
         c_msg = ffi.new('unsigned char[]', data)
         c_signature = ffi.new('unsigned char[]', self._DIGEST_LENGTH)
         c_sign_len = ffi.new('size_t *')
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _mac.lib.hmac_sign(self._DIGEST, c_msg, len(data),
-                                    c_signature, c_sign_len, self._c_pkey,
-                                    c_err_msg, lib.ERROR_MSG_LENGTH)
+                                    c_signature, c_sign_len, self._c_pkey)
         if not status:
-            err_msg = lib.report_libressl_error(ffi, c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _mac.lib))
 
         assert(self._DIGEST_LENGTH >= c_sign_len[0])      # TODO: add proper exception
         signature = lib.retrieve_bytes(ffi, c_signature, c_sign_len[0])
@@ -71,15 +64,13 @@ class _HMAC(object):
 
         c_msg = ffi.new('unsigned char[]', data)
         c_signature = ffi.new('unsigned char[]', auth_code)
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _mac.lib.hmac_verify(self._DIGEST, c_msg, len(data),
-                                       c_signature, len(auth_code), self._c_pkey,
-                                       c_err_msg, lib.ERROR_MSG_LENGTH)
+                                      c_signature, len(auth_code),
+                                      self._c_pkey)
 
         if status == 0:
-            err_msg = lib.report_libressl_error(ffi, c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _mac.lib))
         elif status == -1:
             return False
         else:

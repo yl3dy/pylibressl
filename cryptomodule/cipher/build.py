@@ -4,6 +4,9 @@ import cffi
 cdef = """
 typedef ... EVP_CIPHER;
 
+char *ERR_error_string(unsigned long e, char *buf);
+unsigned long ERR_get_error(void);
+
 const EVP_CIPHER* EVP_gost2814789_cnt(void);
 const EVP_CIPHER* EVP_aes_256_ctr(void);
 const EVP_CIPHER* EVP_aes_256_cbc(void);
@@ -13,25 +16,23 @@ const int AEAD_TAG_SIZE;
 
 int cipher_encrypt(EVP_CIPHER* cipher, unsigned char* data, int data_len, unsigned char* key,
                    unsigned char* iv, unsigned char* enc_data,
-                   int* enc_data_len, char* error_string, size_t error_string_len);
+                   int* enc_data_len);
 int cipher_decrypt(EVP_CIPHER* cipher, unsigned char* enc_data, int enc_data_len,
                    unsigned char* key, unsigned char* iv,
-                   unsigned char* data, int* data_len, char* error_string, size_t error_string_len);
+                   unsigned char* data, int* data_len);
 
 int cipher_aead_encrypt(EVP_CIPHER* cipher,
                        unsigned char* data, int data_len,
                        unsigned char* key, unsigned char* iv,
                        unsigned char* enc_data, int* enc_data_len,
                        unsigned char* tag,
-                       unsigned char* aad, int aad_len,
-                       char* error_string, size_t error_string_len);
+                       unsigned char* aad, int aad_len);
 int cipher_aead_decrypt(EVP_CIPHER* cipher,
                        unsigned char* enc_data, int enc_data_len,
                        unsigned char* key, unsigned char* iv,
                        unsigned char* data, int* data_len,
                        unsigned char* tag,
-                       unsigned char* aad, int aad_len,
-                       char* error_string, size_t error_string_len);
+                       unsigned char* aad, int aad_len);
 """
 
 ffi = cffi.FFI()

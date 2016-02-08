@@ -45,15 +45,12 @@ class _Hash(object):
         c_msg = ffi.new('unsigned char[]', self._msg)
         c_digest = ffi.new('unsigned char[]', self._MAX_HASH_SIZE)
         c_digest_len = ffi.new('unsigned int*')
-        c_err_msg = ffi.new('char[]', lib.ERROR_MSG_LENGTH)
 
         status = _digest.lib.digest(self._HASH_ID, c_msg, len(self._msg),
-                                    c_digest, c_digest_len, c_err_msg,
-                                    lib.ERROR_MSG_LENGTH)
+                                    c_digest, c_digest_len)
 
         if not status:
-            err_msg = lib.report_libressl_error(ffi, c_err_msg)
-            raise LibreSSLError(err_msg)
+            raise LibreSSLError(lib.get_libressl_error(ffi, _diges.lib))
 
         digest_value = lib.retrieve_bytes(ffi, c_digest, c_digest_len[0])
 

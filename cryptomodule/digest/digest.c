@@ -2,13 +2,11 @@
 
 int digest(EVP_MD* digest_id,
            unsigned char* msg, unsigned int msg_len,
-           unsigned char* digest, unsigned int* digest_len,
-           char* error_string, size_t error_string_len)
+           unsigned char* digest, unsigned int* digest_len)
 {
     EVP_MD_CTX* digest_ctx = EVP_MD_CTX_create();
     if(!digest_ctx) {
-        report_error(error_string, error_string_len);
-        return 0;
+        goto err;
     }
 
     if(1 != EVP_DigestInit_ex(digest_ctx, digest_id, NULL)) {
@@ -27,7 +25,8 @@ int digest(EVP_MD* digest_id,
     return 1;
 
 err:
-    report_error(error_string, error_string_len);
-    EVP_MD_CTX_destroy(digest_ctx);
+    if(digest_ctx) {
+        EVP_MD_CTX_destroy(digest_ctx);
+    }
     return 0;
 }
