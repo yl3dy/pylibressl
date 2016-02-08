@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGES="digest cipher mac rsa"
+PACKAGES="digest cipher mac rsa kdf"
 
 echo '### Building core aux module'
 PYTHONPATH='.' python3 cryptomodule/build.py

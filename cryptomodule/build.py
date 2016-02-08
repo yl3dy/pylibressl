@@ -31,6 +31,7 @@ def configure_ffi(ffi, package_name, cdef):
 
     Assume that the main header is {package_name}.h and grab all C source files
     in package directory plus common sources (`cryptomodule_lib.c`).
+
     """
     join = os.path.join   # just a shorthand
 
@@ -49,6 +50,25 @@ def configure_ffi(ffi, package_name, cdef):
                    include_dirs=INCLUDE_DIRS, sources=source_files,
                    extra_compile_args=EXTRA_COMPILE_ARGS,
                    extra_link_args=EXTRA_LINK_ARGS)
+
+def configure_ffi_simple(ffi, package_name, cdef):
+    """Simple FFI configuration.
+
+    In contrast to `configure_ffi`, does not add any additional sources beside
+    project-wide library.
+
+    """
+    ffi.cdef(cdef)
+
+    source = '#include "cryptomodule_lib.h"'
+    source_files = ['cryptomodule/cryptomodule_lib.c']
+
+    ffi.set_source('cryptomodule.{pkg}._{pkg}'.format(pkg=package_name),
+                   source, libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
+                   include_dirs=INCLUDE_DIRS, sources=source_files,
+                   extra_compile_args=EXTRA_COMPILE_ARGS,
+                   extra_link_args=EXTRA_LINK_ARGS)
+
 
 # Build auxiliary initialization module
 ffi = cffi.FFI()
