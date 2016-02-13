@@ -44,6 +44,15 @@ void EVP_MD_CTX_destroy(EVP_MD_CTX *ctx);
 int EVP_MD_size(const EVP_MD *md);
 int EVP_MD_block_size(const EVP_MD *md);
 /////////////////////////
+
+/////// PBKDF2 //////////
+int PKCS5_PBKDF2_HMAC_SHA1(const char *pass, int passlen,
+    const unsigned char *salt, int saltlen, int iter, int keylen,
+    unsigned char *out);
+int PKCS5_PBKDF2_HMAC(const char *pass, int passlen, const unsigned char *salt,
+    int saltlen, int iter, const EVP_MD *digest, int keylen,
+    unsigned char *out);
+/////////////////////////
 '''
 src = '''
 #include <openssl/evp.h>
