@@ -11,81 +11,52 @@ import os
 import cffi
 
 TOPLEVEL_PACKAGE_PATH = os.path.abspath(os.path.dirname(__file__))
+SOURCES = []
 LIBRARIES = ['crypto']
 LIBRARY_DIRS = ['/usr/local/ssl/lib']
 INCLUDE_DIRS = ['/usr/local/ssl/include', TOPLEVEL_PACKAGE_PATH]
 EXTRA_COMPILE_ARGS = []
 EXTRA_LINK_ARGS = []
 
-def is_filename_source(fname):
-    """Check if specified filename is a valid C source.
+cdef = '''
+void OPENSSL_add_all_algorithms_noconf(void);
 
-    Rules: '.c' extension and never starts with '_' (not to mix with
-    CFFI-generated sources).
+void ERR_load_crypto_strings(void);
+char *ERR_error_string(unsigned long e, char *buf);
+unsigned long ERR_get_error(void);
 
-    """
-    return fname.endswith('.c') and not fname.startswith('_')
+typedef ... ENGINE;
 
-def configure_ffi(ffi, package_name, cdef):
-    """Configure FFI object using default settings.
+/////// Digests /////////
+typedef ... EVP_MD;
+typedef ... EVP_MD_CTX;
+#define EVP_MAX_MD_SIZE ...
 
-    Assume that the main header is {package_name}.h and grab all C source files
-    in package directory plus common sources (`cryptomodule_lib.c`).
+const EVP_MD* EVP_streebog512(void);
+const EVP_MD* EVP_sha512(void);
 
-    """
-    join = os.path.join   # just a shorthand
+EVP_MD_CTX *EVP_MD_CTX_create(void);
+int EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type, ENGINE *impl);
+int EVP_DigestUpdate(EVP_MD_CTX *ctx, const void *d, size_t cnt);
+int EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s);
+void EVP_MD_CTX_destroy(EVP_MD_CTX *ctx);
 
-    ffi.cdef(cdef)
+int EVP_MD_size(const EVP_MD *md);
+int EVP_MD_block_size(const EVP_MD *md);
+/////////////////////////
+'''
+src = '''
+#include <openssl/evp.h>
+#include <openssl/err.h>
+'''
 
-    source = '#include "{pkg}/{pkg}.h"'.format(pkg=package_name)
-    source = '\n'.join((source, '#include "cryptomodule_lib.h"'))
-
-    source_files = ['cryptomodule/cryptomodule_lib.c']
-    # Look for additional source files in package directory
-    source_files += [join('cryptomodule', package_name, fname) for fname in
-                     os.listdir(join(TOPLEVEL_PACKAGE_PATH, package_name)) if
-                     is_filename_source(fname)]
-    ffi.set_source('cryptomodule.{pkg}._{pkg}'.format(pkg=package_name),
-                   source, libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
-                   include_dirs=INCLUDE_DIRS, sources=source_files,
-                   extra_compile_args=EXTRA_COMPILE_ARGS,
-                   extra_link_args=EXTRA_LINK_ARGS)
-
-def configure_ffi_simple(ffi, package_name, cdef):
-    """Simple FFI configuration.
-
-    In contrast to `configure_ffi`, does not add any additional sources beside
-    project-wide library.
-
-    """
-    ffi.cdef(cdef)
-
-    source = '#include "cryptomodule_lib.h"'
-    source_files = ['cryptomodule/cryptomodule_lib.c']
-
-    ffi.set_source('cryptomodule.{pkg}._{pkg}'.format(pkg=package_name),
-                   source, libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
-                   include_dirs=INCLUDE_DIRS, sources=source_files,
-                   extra_compile_args=EXTRA_COMPILE_ARGS,
-                   extra_link_args=EXTRA_LINK_ARGS)
-
-
-# Build auxiliary initialization module
 ffi = cffi.FFI()
-ffi.cdef('void initialize_libressl(void);')
-ffi.set_source('cryptomodule._aux', '#include "cryptomodule_lib.h"',
+ffi.cdef(cdef)
+ffi.set_source('cryptomodule._cryptomodule', src,
                libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
-               include_dirs=INCLUDE_DIRS,
-               sources=('cryptomodule/cryptomodule_lib.c',),
+               include_dirs=INCLUDE_DIRS, sources=SOURCES,
                extra_compile_args=EXTRA_COMPILE_ARGS,
                extra_link_args=EXTRA_LINK_ARGS)
-
-def initialize_libressl():
-    try:
-        from . import _aux
-        _aux.lib.initialize_libressl()
-    except ImportError:    # pretend that we want just to compile
-        pass
 
 if __name__ == '__main__':
     ffi.compile()

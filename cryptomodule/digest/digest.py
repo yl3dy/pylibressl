@@ -1,10 +1,6 @@
-try:
-    from . import _digest
-except ImportError:
-    raise ImportError('Digest C module not compiled')
-
-import cryptomodule.lib as lib
-from cryptomodule.exceptions import *
+from .. import lib
+from ..exceptions import *
+from .. import _cryptomodule
 
 class _Hash(object):
     """Generic hash object.
@@ -19,7 +15,7 @@ class _Hash(object):
     _HASH_ID = None
     # Maximum LibreSSL hash size. Not optimal, but the size is not very big
     # anyway.
-    _MAX_HASH_SIZE = _digest.lib.EVP_MAX_MD_SIZE
+    _MAX_HASH_SIZE = _cryptomodule.lib.EVP_MAX_MD_SIZE
 
     @classmethod
     def new(cls, data=None):
@@ -30,40 +26,57 @@ class _Hash(object):
         return hash
 
     def __init__(self):
-        self._msg = b''
+        ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+        self._c_digest_ctx = ffi.gc(clib.EVP_MD_CTX_create(),
+                                    clib.EVP_MD_CTX_destroy)
+        if self._c_digest_ctx == ffi.NULL:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        status = clib.EVP_DigestInit_ex(self._c_digest_ctx, self._HASH_ID,
+                                        ffi.NULL)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
 
     def update(self, data):
         """Append more data to digest."""
         if type(data) != type(b''):
             raise ValueError('Data should be a binary string')
-        self._msg += data
+
+        ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+
+        c_data = ffi.new('unsigned char[]', data)
+        status = clib.EVP_DigestUpdate(self._c_digest_ctx, c_data,
+                                       len(data))
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
 
     def digest(self):
         """Show digest as a byte string."""
-        ffi = _digest.ffi
+        ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
 
-        c_msg = ffi.new('unsigned char[]', self._msg)
-        c_digest = ffi.new('unsigned char[]', self._MAX_HASH_SIZE)
+        c_digest = ffi.new('unsigned char[]', self.size())
         c_digest_len = ffi.new('unsigned int*')
 
-        status = _digest.lib.digest(self._HASH_ID, c_msg, len(self._msg),
-                                    c_digest, c_digest_len)
+        status = clib.EVP_DigestFinal_ex(self._c_digest_ctx, c_digest,
+                                         c_digest_len)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        assert c_digest_len[0] == self.size()
 
-        if not status:
-            raise LibreSSLError(lib.get_libressl_error(ffi, _diges.lib))
-
-        digest_value = lib.retrieve_bytes(ffi, c_digest, c_digest_len[0])
-
-        # should save _msg till the end to help debugging library errors
-        self._msg = b''
-
+        digest_value = lib.retrieve_bytes(c_digest, c_digest_len[0])
         return digest_value
+
+    def size(self):
+        return _cryptomodule.lib.EVP_MD_size(self._HASH_ID)
+
+    def block_size(self):
+        return _cryptomodule.lib.EVP_MD_block_size(self._HASH_ID)
 
 
 class Streebog512(_Hash):
     """Streebog (GOST R 34.11.2012) hash."""
-    _HASH_ID = _digest.lib.EVP_streebog512()
+    _HASH_ID = _cryptomodule.lib.EVP_streebog512()
 
 class SHA512(_Hash):
     """SHA512 hash."""
-    _HASH_ID = _digest.lib.EVP_sha512()
+    _HASH_ID = _cryptomodule.lib.EVP_sha512()

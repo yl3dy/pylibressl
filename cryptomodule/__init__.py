@@ -13,5 +13,5 @@ For more details, see appropriate subpackages.
 
 """
 
-from .build import initialize_libressl
+from .lib import initialize_libressl
 initialize_libressl()
