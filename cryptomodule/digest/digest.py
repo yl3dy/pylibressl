@@ -2,6 +2,8 @@ from .. import lib
 from ..exceptions import *
 from .. import _cryptomodule
 
+ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+
 class _Hash(object):
     """Generic hash object.
 
@@ -26,7 +28,6 @@ class _Hash(object):
         return hash
 
     def __init__(self):
-        ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
         self._c_digest_ctx = ffi.gc(clib.EVP_MD_CTX_create(),
                                     clib.EVP_MD_CTX_destroy)
         if self._c_digest_ctx == ffi.NULL:
@@ -42,8 +43,6 @@ class _Hash(object):
         if type(data) != type(b''):
             raise ValueError('Data should be a binary string')
 
-        ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
-
         c_data = ffi.new('unsigned char[]', data)
         status = clib.EVP_DigestUpdate(self._c_digest_ctx, c_data,
                                        len(data))
@@ -52,8 +51,6 @@ class _Hash(object):
 
     def digest(self):
         """Show digest as a byte string."""
-        ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
-
         c_digest = ffi.new('unsigned char[]', self.size())
         c_digest_len = ffi.new('unsigned int*')
 
@@ -66,17 +63,21 @@ class _Hash(object):
         digest_value = lib.retrieve_bytes(c_digest, c_digest_len[0])
         return digest_value
 
-    def size(self):
-        return _cryptomodule.lib.EVP_MD_size(self._HASH_ID)
+    @classmethod
+    def size(cls):
+        """Return size of digest in bytes."""
+        return clib.EVP_MD_size(cls._HASH_ID)
 
-    def block_size(self):
-        return _cryptomodule.lib.EVP_MD_block_size(self._HASH_ID)
+    @classmethod
+    def block_size(cls):
+        """Return block size of digest in bytes."""
+        return clib.EVP_MD_block_size(cls._HASH_ID)
 
 
 class Streebog512(_Hash):
     """Streebog (GOST R 34.11.2012) hash."""
-    _HASH_ID = _cryptomodule.lib.EVP_streebog512()
+    _HASH_ID = clib.EVP_streebog512()
 
 class SHA512(_Hash):
     """SHA512 hash."""
-    _HASH_ID = _cryptomodule.lib.EVP_sha512()
+    _HASH_ID = clib.EVP_sha512()

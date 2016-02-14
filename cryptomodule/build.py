@@ -20,12 +20,16 @@ EXTRA_LINK_ARGS = []
 
 cdef = '''
 void OPENSSL_add_all_algorithms_noconf(void);
+typedef ... ENGINE;
 
+int CRYPTO_memcmp(const void *a, const void *b, size_t len);
+void OPENSSL_cleanse(void *ptr, size_t len);
+
+/////// Error handling /////////
 void ERR_load_crypto_strings(void);
 char *ERR_error_string(unsigned long e, char *buf);
 unsigned long ERR_get_error(void);
-
-typedef ... ENGINE;
+////////////////////////////////
 
 /////// Digests /////////
 typedef ... EVP_MD;
@@ -53,10 +57,27 @@ int PKCS5_PBKDF2_HMAC(const char *pass, int passlen, const unsigned char *salt,
     int saltlen, int iter, const EVP_MD *digest, int keylen,
     unsigned char *out);
 /////////////////////////
+
+/////// Private/public keys //////////
+typedef ... EVP_PKEY;
+typedef ... EVP_PKEY_CTX;
+#define EVP_PKEY_HMAC ...
+
+EVP_PKEY *EVP_PKEY_new_mac_key(int type, ENGINE *e, const unsigned char *key,
+    int keylen);
+void EVP_PKEY_free(EVP_PKEY*);
+//////////////////////////////////////
+
+/////// Signing //////////
+int EVP_DigestSignInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
+    const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey);
+int EVP_DigestSignFinal(EVP_MD_CTX *ctx, unsigned char *sigret, size_t *siglen);
+//////////////////////////
 '''
 src = '''
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/crypto.h>
 '''
 
 ffi = cffi.FFI()
