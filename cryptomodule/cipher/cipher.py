@@ -1,88 +1,55 @@
-try:
-    from . import _cipher
-except ImportError:
-    raise ImportError('Symmetric encryption C module not compiled')
+from .. import lib
+from ..exceptions import *
+from .. import _cryptomodule
 
-import cryptomodule.lib as lib
-from cryptomodule.exceptions import *
+ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
 
 # Mode identifiers
 MODE_CTR = 1
 MODE_GCM = 2
 MODE_CBC = 3
+MODES = {'CTR': MODE_CTR, 'GCM': MODE_GCM, 'CBC': MODE_CBC}
+
 
 class _Cipher(object):
-    """Generic cipher object."""
+    """Base symmetric cipher class."""
+
+    _CIPHER_ID = None  # EVP function returning EVP_CIPHER ID
+    _MODE = None  # mode identifier (see MODE_* constants)
 
     @classmethod
-    def new(cls, key, iv, mode):
+    def new(cls, key, iv):
         """Create new cipher object."""
         # verify key/IV validity
         if type(key) != type(b'') or type(iv) != type(b''):
             raise ValueError('Key/IV values should be bytes instances')
-        if len(key) != cls.KEY_LENGTH or len(iv) != cls.BLOCK_SIZE:
+        if len(key) != cls.key_length() or len(iv) != cls.iv_length():
             raise ValueError('Key/IV lengths are incorrect')
 
-        if not mode in cls._CIPHER_IDS.keys():
-            raise ValueError('Incorrect mode specified')
-
-        cipher = cls(key, iv, mode)
+        cipher = cls(key, iv)
         return cipher
 
-    def __init__(self, key, iv, mode):
-        self._key = key
-        self._iv = iv
-        self._CIPHER_ID = self._CIPHER_IDS[mode]
-        self.MODE = mode
-        self.MODES = tuple(self._CIPHER_IDS.keys())
-        self._AEAD_TAG_SIZE = _cipher.lib.AEAD_TAG_SIZE
+    def __init__(self, key, iv):
+        self._c_key = ffi.new('unsigned char[]', key)
+        self._c_key_len = len(key)
+        self._c_iv = ffi.new('unsigned char[]', iv)
+        self._c_iv_len = len(iv)
 
+    @classmethod
+    def block_size(self):
+        return clib.EVP_CIPHER_block_size(self._CIPHER_ID)
 
-    def _encrypt(self, data):
-        ffi = _cipher.ffi
+    @classmethod
+    def key_length(self):
+        return clib.EVP_CIPHER_key_length(self._CIPHER_ID)
 
-        c_data = ffi.new('unsigned char[]', data)
-        c_key = ffi.new('unsigned char[]', self._key)
-        c_iv = ffi.new('unsigned char[]', self._iv)
-        c_enc_data = ffi.new('unsigned char[]', 2*len(data))
-        c_enc_data_len = ffi.new('int *')
+    @classmethod
+    def iv_length(self):
+        return clib.EVP_CIPHER_iv_length(self._CIPHER_ID)
 
-        status = _cipher.lib.cipher_encrypt(self._CIPHER_ID, c_data, len(data),
-                                            c_key, c_iv, c_enc_data,
-                                            c_enc_data_len)
-
-        if not status:
-            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
-
-        encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
-        return encrypted_data
-
-    def _encrypt_gcm(self, data, **kwargs):
-        ffi = _cipher.ffi
-        aad = kwargs.get('aad')
-        if aad != None and type(aad) != type(b''):
-            raise ValueError('AAD should be a byte string')
-
-        c_data = ffi.new('const char[]', data)
-        c_key = ffi.new('unsigned char[]', self._key)
-        c_iv = ffi.new('unsigned char[]', self._iv)
-        c_enc_data = ffi.new('unsigned char[]', 2*len(data))
-        c_enc_data_len = ffi.new('int *')
-        c_tag = ffi.new('unsigned char[]', self._AEAD_TAG_SIZE)
-        c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
-        aad_len = len(aad) if aad else 0
-
-        status = _cipher.lib.cipher_aead_encrypt(self._CIPHER_ID, c_data,
-                                                 len(data), c_key, c_iv,
-                                                 c_enc_data, c_enc_data_len,
-                                                 c_tag, c_aad, aad_len)
-
-        if not status:
-            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
-
-        encrypted_data = lib.retrieve_bytes(_cipher.ffi, c_enc_data, c_enc_data_len[0])
-        tag = lib.retrieve_bytes(_cipher.ffi, c_tag, self._AEAD_TAG_SIZE)
-        return encrypted_data, tag
+    @classmethod
+    def mode(self):
+        return self._MODE
 
     def encrypt(self, data, **kwargs):
         """Encrypt a message.
@@ -94,64 +61,10 @@ class _Cipher(object):
         """
         if type(data) != type(b''):
             raise ValueError('Data should be a byte string')
+        return self._encrypt(data, **kwargs)
 
-        if self.MODE == MODE_GCM:
-            return self._encrypt_gcm(data, **kwargs)
-        else:
-            return self._encrypt(data)
-
-
-    def _decrypt(self, data):
-        ffi = _cipher.ffi
-
-        c_enc_data = ffi.new('unsigned char[]', data)
-        c_key = ffi.new('unsigned char[]', self._key)
-        c_iv = ffi.new('unsigned char[]', self._iv)
-        c_dec_data = ffi.new('unsigned char[]', len(data))
-        c_dec_data_len = ffi.new('int*')
-
-        status = _cipher.lib.cipher_decrypt(self._CIPHER_ID, c_enc_data,
-                                            len(data), c_key, c_iv, c_dec_data,
-                                            c_dec_data_len)
-        if not status:
-            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
-
-        decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])
-        return decrypted_data
-
-    def _decrypt_gcm(self, data, tag, **kwargs):
-        ffi = _cipher.ffi
-        aad = kwargs.get('aad')
-
-        if aad != None and type(aad) != type(b''):
-            raise ValueError('AAD should be a byte string')
-        if type(tag) != type(b''):
-            raise ValueError('Tag should be a byte string')
-
-        c_enc_data = ffi.new('unsigned char[]', data)
-        c_key = ffi.new('unsigned char[]', self._key)
-        c_iv = ffi.new('unsigned char[]', self._iv)
-        c_dec_data = ffi.new('unsigned char[]', len(data))
-        c_dec_data_len = ffi.new('int*')
-        c_tag = ffi.new('unsigned char[]', tag)
-        c_aad = ffi.new('unsigned char[]', aad if aad else b'\x00')
-        aad_len = len(aad) if aad else 0
-
-        status = _cipher.lib.cipher_aead_decrypt(self._CIPHER_ID, c_enc_data,
-                                                 len(data), c_key, c_iv,
-                                                 c_dec_data, c_dec_data_len,
-                                                 c_tag, c_aad, aad_len)
-
-        if not status:
-            if status == -1:
-                raise AuthencityError('Cannot decrypt message: is not authentic')
-            raise LibreSSLError(lib.get_libressl_error(ffi, _cipher.lib))
-
-        decrypted_data = lib.retrieve_bytes(_cipher.ffi, c_dec_data, c_dec_data_len[0])
-        return decrypted_data
-
-    def decrypt(self, data, *args, **kwargs):
-        """Encrypt a message.
+    def decrypt(self, data, **kwargs):
+        """Decrypt a message.
 
         :param data: data to encrypt as a byte string
         :param *args: (if GCM mode) tag value
@@ -161,25 +74,244 @@ class _Cipher(object):
         """
         if type(data) != type(b''):
             raise ValueError('Data should be a byte string')
+        return self._decrypt(data, **kwargs)
 
-        if self.MODE == MODE_GCM:
-            tag = args[0]
-            return self._decrypt_gcm(data, tag, **kwargs)
-        else:
-            return self._decrypt(data)
+    def _init_cipher_ctx(self, is_encrypt):
+        """Initialise cipher context.
+
+        Should return cipher context cdata. It should be ready to do
+        EVP_CipherUpdate.
+
+        """
+        raise NotImplementedError
+
+    def _encrypt(self, **kwargs):
+        raise NotImplementedError
+
+    def _decrypt(self, **kwargs):
+        raise NotImplementedError
+
+
+class _CipherOrdinary(_Cipher):
+    """Base ordinary (i.e. not AEAD) symmetric cipher class."""
+
+    def _init_cipher_ctx(self, is_encrypt):
+        init_func = clib.EVP_EncryptInit_ex if is_encrypt else clib.EVP_DecryptInit_ex
+
+        c_cipher_ctx = ffi.gc(clib.EVP_CIPHER_CTX_new(),
+                              clib.EVP_CIPHER_CTX_free)
+        if c_cipher_ctx == ffi.NULL:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        status = init_func(c_cipher_ctx, self._CIPHER_ID, ffi.NULL,
+                           self._c_key, self._c_iv)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        return c_cipher_ctx
+
+    def _encrypt(self, data, **kwargs):
+        c_data = ffi.new('unsigned char[]', data)
+        c_enc_data_alloc = 2*len(data)   # allocated enc_data size
+        c_enc_data = ffi.new('unsigned char[]', c_enc_data_alloc)  # FIXME
+        c_tmp_len = ffi.new('int*')
+
+        c_cipher_ctx = self._init_cipher_ctx(is_encrypt=True)
+
+        status = clib.EVP_EncryptUpdate(c_cipher_ctx, c_enc_data,
+                                        c_tmp_len, c_data, len(data))
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        enc_data_len = c_tmp_len[0]
+
+        status = clib.EVP_EncryptFinal_ex(c_cipher_ctx,
+                                          c_enc_data[c_tmp_len[0]:c_enc_data_alloc],
+                                          c_tmp_len)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        enc_data_len += c_tmp_len[0]
+
+        encrypted_data = lib.retrieve_bytes(c_enc_data, enc_data_len)
+        return encrypted_data
+
+    def _decrypt(self, data, **kwargs):
+        c_data = ffi.new('unsigned char[]', data)
+        c_dec_data_alloc = len(data)
+        c_dec_data = ffi.new('unsigned char[]', c_dec_data_alloc)
+        c_tmp_len = ffi.new('int*')
+
+        c_cipher_ctx = self._init_cipher_ctx(is_encrypt=False)
+
+        status = clib.EVP_DecryptUpdate(c_cipher_ctx, c_dec_data,
+                                        c_tmp_len, c_data, len(data))
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        dec_data_len = c_tmp_len[0]
+
+        status = clib.EVP_DecryptFinal_ex(c_cipher_ctx,
+                                          c_dec_data[c_tmp_len[0]:c_dec_data_alloc],
+                                          c_tmp_len)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        dec_data_len += c_tmp_len[0]
+
+        decrypted_data = lib.retrieve_bytes(c_dec_data, dec_data_len)
+        return decrypted_data
+
+
+class _CipherAEAD(_Cipher):
+    """Base GCM symmetric cipher class."""
+
+    _AEAD_TAG_SIZE = 16
+
+    @classmethod
+    def iv_length(self):
+        return self._AEAD_TAG_SIZE
+
+    def _init_cipher_ctx(self, is_encrypt):
+        init_func = clib.EVP_EncryptInit_ex if is_encrypt else clib.EVP_DecryptInit_ex
+
+        c_cipher_ctx = ffi.gc(clib.EVP_CIPHER_CTX_new(),
+                              clib.EVP_CIPHER_CTX_free)
+        if c_cipher_ctx == ffi.NULL:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        status = init_func(c_cipher_ctx, self._CIPHER_ID, ffi.NULL,
+                           ffi.NULL, ffi.NULL)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        # Set IV length to 16
+        status = clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
+                                          clib.EVP_CTRL_GCM_SET_IVLEN,
+                                          self._AEAD_TAG_SIZE, ffi.NULL)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        status = init_func(c_cipher_ctx, ffi.NULL, ffi.NULL, self._c_key,
+                           self._c_iv)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        return c_cipher_ctx
+
+    def _encrypt(self, data, **kwargs):
+        aad = kwargs.get('aad')
+        if aad != None and type(aad) != type(b''):
+            raise ValueError('AAD should be a byte string')
+
+        c_cipher_ctx = self._init_cipher_ctx(is_encrypt=True)
+
+        c_data = ffi.new('unsigned char[]', data)
+        c_enc_data_alloc = 2*len(data)
+        c_enc_data = ffi.new('unsigned char[]', c_enc_data_alloc)
+        c_tmp_len = ffi.new('int*')
+        c_tag = ffi.new('unsigned char[]', self._AEAD_TAG_SIZE)
+        if aad:
+            c_aad = ffi.new('unsigned char[]', aad)
+
+        # Write AAD
+        if aad:
+            status = clib.EVP_EncryptUpdate(c_cipher_ctx, ffi.NULL, c_tmp_len,
+                                            c_aad, len(aad))
+            if status != 1:
+                raise LibreSSLError(lib.get_libressl_error())
+
+        # Write data to encrypt
+        status = clib.EVP_EncryptUpdate(c_cipher_ctx, c_enc_data, c_tmp_len,
+                                        c_data, len(data))
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        enc_data_len = c_tmp_len[0]
+
+        status = clib.EVP_EncryptFinal_ex(c_cipher_ctx,
+                                          c_enc_data[c_tmp_len[0]:c_enc_data_alloc],
+                                          c_tmp_len)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        enc_data_len += c_tmp_len[0]
+
+        status = clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
+                                          clib.EVP_CTRL_GCM_GET_TAG,
+                                          self._AEAD_TAG_SIZE, c_tag)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        encrypted_data = lib.retrieve_bytes(c_enc_data, enc_data_len)
+        tag = lib.retrieve_bytes(c_tag, self._AEAD_TAG_SIZE)
+        return encrypted_data, tag
+
+    def _decrypt(self, data, **kwargs):
+        aad = kwargs.get('aad')
+        tag = kwargs.get('tag')
+        if aad != None and type(aad) != type(b''):
+            raise ValueError('AAD should be a byte string')
+        if not tag or type(tag) != type(b''):
+            raise ValueError('Tag should be present and a byte string')
+        if len(tag) != self._AEAD_TAG_SIZE:
+            raise ValueError('Tag size is incorrect')
+
+        c_cipher_ctx = self._init_cipher_ctx(is_encrypt=False)
+
+        c_data = ffi.new('unsigned char[]', data)
+        c_dec_data_alloc = 2*len(data)
+        c_dec_data = ffi.new('unsigned char[]', c_dec_data_alloc)
+        c_tmp_len = ffi.new('int*')
+        c_tag = ffi.new('unsigned char[]', tag)
+        if aad:
+            c_aad = ffi.new('unsigned char[]', aad)
+
+        # Write AAD
+        if aad:
+            status = clib.EVP_DecryptUpdate(c_cipher_ctx, ffi.NULL, c_tmp_len,
+                                            c_aad, len(aad))
+            if status != 1:
+                raise LibreSSLError(lib.get_libressl_error())
+
+        # Write data to decrypt
+        status = clib.EVP_DecryptUpdate(c_cipher_ctx, c_dec_data, c_tmp_len,
+                                        c_data, len(data))
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+        dec_data_len = c_tmp_len[0]
+
+        status = clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
+                                          clib.EVP_CTRL_GCM_SET_TAG,
+                                          self._AEAD_TAG_SIZE, c_tag)
+        if status != 1:
+            raise LibreSSLError(lib.get_libressl_error())
+
+        status = clib.EVP_DecryptFinal_ex(c_cipher_ctx,
+                                          c_dec_data[c_tmp_len[0]:c_dec_data_alloc],
+                                          c_tmp_len)
+        if status <= 0:
+            raise AuthencityError
+        dec_data_len += c_tmp_len[0]
+
+        decrypted_data = lib.retrieve_bytes(c_dec_data, dec_data_len)
+        return decrypted_data
 
 
 
-class GOST89(_Cipher):
-    """GOST R 28147-89 cipher."""
-    KEY_LENGTH = 32
-    BLOCK_SIZE = 8
-    _CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_gost2814789_cnt()}
+class AES256_CTR(_CipherOrdinary):
+    """AES 256-bit cipher in CTR (counter) mode."""
+    _CIPHER_ID = clib.EVP_aes_256_ctr()
+    _MODE = MODE_CTR
 
-class AES256(_Cipher):
-    """AES 256-bit cipher."""
-    KEY_LENGTH = 32
-    BLOCK_SIZE = 16
-    _CIPHER_IDS = {MODE_CTR: _cipher.lib.EVP_aes_256_ctr(),
-                   MODE_CBC: _cipher.lib.EVP_aes_256_cbc(),
-                   MODE_GCM: _cipher.lib.EVP_aes_256_gcm()}
+class AES256_CBC(_CipherOrdinary):
+    """AES 256-bit cipher in CBC (cipher block chaining) mode."""
+    _CIPHER_ID = clib.EVP_aes_256_cbc()
+    _MODE = MODE_CBC
+
+class AES256_GCM(_CipherAEAD):
+    """AES 256-bit cipher in GCM (Galois counter) mode."""
+    _CIPHER_ID = clib.EVP_aes_256_gcm()
+    _MODE = MODE_GCM
+
+class GOST89_CTR(_CipherOrdinary):
+    """GOST R 28147-89 256-bit cipher in CTR (counter) mode."""
+    _CIPHER_ID = clib.EVP_gost2814789_cnt()
+    _MODE = MODE_CTR
+
+
+AES256 = {MODE_CBC: AES256_CBC, MODE_CTR: AES256_CTR, MODE_GCM: AES256_GCM}

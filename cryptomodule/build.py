@@ -73,6 +73,43 @@ int EVP_DigestSignInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
     const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey);
 int EVP_DigestSignFinal(EVP_MD_CTX *ctx, unsigned char *sigret, size_t *siglen);
 //////////////////////////
+
+/////// Symmetric ciphers //////////
+typedef ... EVP_CIPHER;
+typedef ... EVP_CIPHER_CTX;
+
+#define EVP_CTRL_GCM_SET_TAG ...
+#define EVP_CTRL_GCM_GET_TAG ...
+#define EVP_CTRL_GCM_SET_IVLEN ...
+
+const EVP_CIPHER *EVP_aes_256_ctr(void);
+const EVP_CIPHER *EVP_aes_256_cbc(void);
+const EVP_CIPHER *EVP_aes_256_gcm(void);
+const EVP_CIPHER *EVP_gost2814789_cnt(void);
+
+int EVP_CIPHER_block_size(const EVP_CIPHER *cipher);
+int EVP_CIPHER_key_length(const EVP_CIPHER *cipher);
+int EVP_CIPHER_iv_length(const EVP_CIPHER *cipher);
+
+void EVP_CIPHER_CTX_init(EVP_CIPHER_CTX *a);
+EVP_CIPHER_CTX *EVP_CIPHER_CTX_new(void);
+void EVP_CIPHER_CTX_free(EVP_CIPHER_CTX *a);
+int EVP_CIPHER_CTX_cleanup(EVP_CIPHER_CTX *a);
+
+int EVP_EncryptInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher,
+    ENGINE *impl, const unsigned char *key, const unsigned char *iv);
+int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl);
+int EVP_EncryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+
+int EVP_DecryptInit_ex(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher,
+    ENGINE *impl, const unsigned char *key, const unsigned char *iv);
+int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl);
+int EVP_DecryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *outm, int *outl);
+
+int EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
+////////////////////////////////////
 '''
 src = '''
 #include <openssl/evp.h>

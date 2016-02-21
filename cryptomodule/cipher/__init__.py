@@ -10,7 +10,8 @@ Usage example:
 
 """
 
+from .cipher import AES256_CTR, AES256_GCM, AES256_CBC, GOST89_CTR
 from .cipher import MODE_CTR, MODE_GCM, MODE_CBC
-from .cipher import GOST89, AES256
 
-__all__ = ['GOST89', 'AES256', 'MODE_CBC', 'MODE_CTR', 'MODE_GCM']
+__all__ = ['AES256_CTR', 'AES256_GCM', 'AES256_CBC', 'GOST89_CTR',
+           'MODE_CBC', 'MODE_CTR', 'MODE_GCM']
