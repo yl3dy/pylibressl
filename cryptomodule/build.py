@@ -21,9 +21,13 @@ EXTRA_LINK_ARGS = []
 cdef = '''
 void OPENSSL_add_all_algorithms_noconf(void);
 typedef ... ENGINE;
+typedef ... BIO;
 
 int CRYPTO_memcmp(const void *a, const void *b, size_t len);
 void OPENSSL_cleanse(void *ptr, size_t len);
+
+BIO *BIO_new_mem_buf(void *buf, int len);
+void BIO_free_all(BIO *a);
 
 /////// Error handling /////////
 void ERR_load_crypto_strings(void);
@@ -62,9 +66,11 @@ int PKCS5_PBKDF2_HMAC(const char *pass, int passlen, const unsigned char *salt,
 typedef ... EVP_PKEY;
 typedef ... EVP_PKEY_CTX;
 #define EVP_PKEY_HMAC ...
+#define EVP_PKEY_RSA ...
 
 EVP_PKEY *EVP_PKEY_new_mac_key(int type, ENGINE *e, const unsigned char *key,
     int keylen);
+EVP_PKEY *EVP_PKEY_new(void);
 void EVP_PKEY_free(EVP_PKEY*);
 //////////////////////////////////////
 
@@ -110,11 +116,27 @@ int EVP_DecryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *outm, int *outl);
 
 int EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
 ////////////////////////////////////
+
+/////// RSA //////////
+typedef ... RSA;
+typedef ... pem_password_cb;
+
+int EVP_PKEY_set1_RSA(EVP_PKEY *pkey, RSA *key);
+
+RSA *PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **x,
+                    pem_password_cb *cb, void *u);
+RSA *PEM_read_bio_RSAPublicKey(BIO *bp, RSA **x,
+                    pem_password_cb *cb, void *u);
+
+void RSA_free(RSA *r);
+//////////////////////
 '''
 src = '''
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
+#include <openssl/bio.h>
+#include <openssl/pem.h>
 '''
 
 ffi = cffi.FFI()
