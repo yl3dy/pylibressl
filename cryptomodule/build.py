@@ -136,6 +136,21 @@ RSA *PEM_read_bio_RSAPublicKey(BIO *bp, RSA **x,
 
 void RSA_free(RSA *r);
 //////////////////////
+
+/////// Asymmetric cipher //////////
+int EVP_SealInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+    unsigned char **ek, int *ekl, unsigned char *iv, EVP_PKEY **pubk,
+    int npubk);
+int EVP_SealFinal(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+int _wrap_EVP_SealUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl);
+
+int EVP_OpenInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
+    const unsigned char *ek, int ekl, const unsigned char *iv, EVP_PKEY *priv);
+int EVP_OpenFinal(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
+int _wrap_EVP_OpenUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl);
+////////////////////////////////////
 '''
 src = '''
 #include <openssl/evp.h>
@@ -154,6 +169,22 @@ extern int _wrap_EVP_DigestVerifyUpdate(EVP_MD_CTX *ctx, const void* msg, size_t
 int _wrap_EVP_DigestVerifyUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size)
 {
     return EVP_DigestVerifyUpdate(ctx, msg, size);
+}
+
+extern int _wrap_EVP_SealUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl);
+int _wrap_EVP_SealUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl)
+{
+    return EVP_SealUpdate(ctx, out, outl, in, inl);
+}
+
+extern int _wrap_EVP_OpenUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl);
+int _wrap_EVP_OpenUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
+    const unsigned char *in, int inl)
+{
+    return EVP_OpenUpdate(ctx, out, outl, in, inl);
 }
 '''
 

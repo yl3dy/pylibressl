@@ -29,6 +29,25 @@ class _Cipher(object):
         cipher = cls(key, iv)
         return cipher
 
+    @classmethod
+    def ctx(cls):
+        """Create simple container for cipher context"""
+        class CtxTracker(object):
+            pass
+
+        CtxTracker._CIPHER_ID = cls._CIPHER_ID
+        CtxTracker._MODE = cls._MODE
+        CtxTracker.block_size = cls.block_size
+        CtxTracker.key_length = cls.key_length
+        CtxTracker.iv_length = cls.iv_length
+        CtxTracker.mode = cls.iv_length
+
+        ctxtracker = CtxTracker()
+        ctxtracker.c_cipher_ctx = ffi.gc(clib.EVP_CIPHER_CTX_new(),
+                                         clib.EVP_CIPHER_CTX_free)
+
+        return ctxtracker
+
     def __init__(self, key, iv):
         self._c_key = ffi.new('unsigned char[]', key)
         self._c_key_len = len(key)
