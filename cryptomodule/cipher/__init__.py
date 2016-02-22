@@ -1,12 +1,12 @@
 """
-Ciphers
+Symmetric ciphers
 
 Usage example:
 
->>> from cryptomodule.cipher import GOST89, MODE_CTR
->>> key, iv = b'1'*GOST89.KEY_LENGTH, b'2'*GOST89.BLOCK_SIZE
+>>> from cryptomodule.cipher import GOST89_CTR
+>>> key, iv = b'1'*GOST89_CTR.key_length(), b'2'*GOST89_CTR.block_size()
 >>> data = b'Some data to be encoded'
->>> encoded_data = GOST89.new(key, iv, MODE_CTR).encrypt(data)
+>>> encoded_data = GOST89_CTR.new(key, iv).encrypt(data)
 
 """
 
