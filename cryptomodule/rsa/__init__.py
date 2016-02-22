@@ -23,8 +23,9 @@ Example:
 """
 
 from .keypair import RSAKeypair
+from .sign import RSASign
 
-__all__ = ['RSAKeypair']
+__all__ = ['RSAKeypair', 'RSASign']
 #from .rsa import RSAKeypair, RSASignVerify, RSACrypt
 
 #__all__ = ['RSAKeypair', 'RSASignVerify', 'RSACrypt']

@@ -78,6 +78,12 @@ void EVP_PKEY_free(EVP_PKEY*);
 int EVP_DigestSignInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
     const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey);
 int EVP_DigestSignFinal(EVP_MD_CTX *ctx, unsigned char *sigret, size_t *siglen);
+int _wrap_EVP_DigestSignUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size);
+
+int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
+    const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey);
+int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx, unsigned char *sig, size_t siglen);
+int _wrap_EVP_DigestVerifyUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size);
 //////////////////////////
 
 /////// Symmetric ciphers //////////
@@ -137,6 +143,18 @@ src = '''
 #include <openssl/crypto.h>
 #include <openssl/bio.h>
 #include <openssl/pem.h>
+
+extern int _wrap_EVP_DigestSignUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size);
+int _wrap_EVP_DigestSignUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size)
+{
+    return EVP_DigestSignUpdate(ctx, msg, size);
+}
+
+extern int _wrap_EVP_DigestVerifyUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size);
+int _wrap_EVP_DigestVerifyUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size)
+{
+    return EVP_DigestVerifyUpdate(ctx, msg, size);
+}
 '''
 
 ffi = cffi.FFI()
