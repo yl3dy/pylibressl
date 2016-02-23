@@ -1,6 +1,7 @@
 import cryptomodule.rsa as rsa
 import cryptomodule.cipher as cipher
 from cryptomodule.exceptions import *
+from cryptomodule.digest import Streebog512
 import pytest
 import os
 
@@ -36,7 +37,7 @@ class TestRSAKeypair:
             kp = rsa.RSAKeypair(public_key=bad_public_key,
                                 private_key=bad_private_key)
 
-class TestRSASignVerify:
+class TestRSASign:
     """Test RSA signing."""
 
     private_key = open(os.path.join(TEST_PATH, 'rsa_private.pem'), 'rb').read()
@@ -45,52 +46,58 @@ class TestRSASignVerify:
 
     def test_sign_verify(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
-        signer = rsa.RSASignVerify.new(kp)
+        signer = rsa.RSASign.new(kp)
+        signature = signer.sign(self.good_message)
+        assert signer.verify(self.good_message, signature)
+
+    def test_sign_verify_nonstandart_hash(self):
+        kp = rsa.RSAKeypair(private_key=self.private_key)
+        signer = rsa.RSASign.new(kp, Streebog512)
         signature = signer.sign(self.good_message)
         assert signer.verify(self.good_message, signature)
 
     def test_wrong_keypair(self):
         kp = (1,2,3)
         with pytest.raises(ValueError):
-            signer = rsa.RSASignVerify.new(kp)
+            signer = rsa.RSASign.new(kp)
 
     def test_wrong_type_sign_message(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
-        signer = rsa.RSASignVerify.new(kp)
+        signer = rsa.RSASign.new(kp)
         with pytest.raises(ValueError):
             signer.sign(12345)
 
     def test_wrong_type_verify_message(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
-        signer = rsa.RSASignVerify.new(kp)
+        signer = rsa.RSASign.new(kp)
         signature = signer.sign(self.good_message)
         with pytest.raises(ValueError):
             signer.verify(12345, signature)
 
     def test_wrong_type_verify_signature(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
-        signer = rsa.RSASignVerify.new(kp)
+        signer = rsa.RSASign.new(kp)
         signature = signer.sign(self.good_message)
         with pytest.raises(ValueError):
             signer.verify(self.good_message, 12345678)
 
     def test_tampered_signature(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
-        signer = rsa.RSASignVerify.new(kp)
+        signer = rsa.RSASign.new(kp)
         signature = signer.sign(self.good_message)
         bad_signature = b'\x01' + signature[1:]
         assert not signer.verify(self.good_message, bad_signature)
 
     def test_tampered_message(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
-        signer = rsa.RSASignVerify.new(kp)
+        signer = rsa.RSASign.new(kp)
         signature = signer.sign(self.good_message)
         bad_message = self.good_message[2:]
         assert not signer.verify(bad_message, signature)
 
     def test_wrong_signature_length(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
-        signer = rsa.RSASignVerify.new(kp)
+        signer = rsa.RSASign.new(kp)
         signature = signer.sign(self.good_message)
         bad_signature = signature[3:]
         assert not signer.verify(self.good_message, bad_signature)

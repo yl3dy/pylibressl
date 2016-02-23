@@ -5,8 +5,20 @@ NB: intended only for internal use!
 
 """
 
-def get_libressl_error(ffi, lib):
+try:
+    from . import _cryptomodule
+except ImportError:
+    raise ImportError('Cryptomodule CFFI library not compiled')
+from .exceptions import *
+
+def initialize_libressl():
+    _cryptomodule.lib.OPENSSL_add_all_algorithms_noconf();
+    _cryptomodule.lib.ERR_load_crypto_strings();
+
+def get_libressl_error():
     """Report LibreSSL error w/o passing a string."""
+    ffi, lib = _cryptomodule.ffi, _cryptomodule.lib
+
     c_errno = lib.ERR_get_error()
     c_err_msg = lib.ERR_error_string(c_errno, ffi.NULL)
     err_msg = ffi.string(c_err_msg)
@@ -20,6 +32,11 @@ def get_libressl_error(ffi, lib):
         pass
     return err_msg
 
-def retrieve_bytes(ffi, cdata, size):
+def retrieve_bytes(cdata, size):
     """Retrieve byte string from cdata."""
+    ffi = _cryptomodule.ffi
     return bytes(ffi.buffer(cdata, size))
+
+def check_errcode(status):
+    if status != 1:
+        raise LibreSSLError(get_libressl_error())

@@ -21,6 +21,6 @@ Verifying example:
 
 """
 
-from .hmac import HMACStreebog512
+from .hmac import HMAC
 
-__all__ = ['HMACStreebog512']
+__all__ = ['HMAC']

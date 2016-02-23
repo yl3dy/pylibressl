@@ -6,11 +6,11 @@ wrapper class to store RSA keypair.
 
 Example:
 
->>> from cryptomodule.rsa import RSAKeypair, RSASignVerify
+>>> from cryptomodule.rsa import RSAKeypair, RSASign
 >>>
 >>> privkey = open('private_key.pem', 'rb').read()
 >>> keypair = RSAKeypair(private_key=privkey)
->>> signer = RSASignVerify(keypair)
+>>> signer = RSASign(keypair)
 >>>
 >>> message = b'Example message. 1234567890'
 >>> signature = signer.sign(message)
@@ -22,6 +22,8 @@ Example:
 
 """
 
-from .rsa import RSAKeypair, RSASignVerify, RSACrypt
+from .keypair import RSAKeypair
+from .sign import RSASign
+from .cipher import RSACrypt
 
-__all__ = ['RSAKeypair', 'RSASignVerify', 'RSACrypt']
+__all__ = ['RSAKeypair', 'RSASign', 'RSACrypt']

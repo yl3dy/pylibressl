@@ -7,6 +7,7 @@ Requirements
 * LibreSSL (headers and libs should be in `/usr/local/ssl/include` and `/usr/local/ssl/lib` respectively)
 * cffi > 1.0.0
 * pytest
+* make (optional)
 
 Building prerequisities
 -----------------------
@@ -21,5 +22,5 @@ Building and running
 --------------------
 
 Before testing/building `export LD_LIBRARY_PATH=/usr/local/ssl/lib` should be
-called. To build extensions in dev mode, call `./dev_build.sh`. Run tests using
-`python3 -m pytest`.
+called. To build extensions in dev mode, call `make devbuild`. Run tests using
+`make tests` or `make quiet_tests`.

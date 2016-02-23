@@ -1,6 +1,7 @@
 import pytest
-from cryptomodule.mac import HMACStreebog512
-from cryptomodule.exceptions import AuthencityError, LibreSSLError
+from cryptomodule.mac import HMAC
+from cryptomodule.digest import Streebog512
+from cryptomodule.exceptions import LibreSSLError
 
 class GenericHMACTest:
     """Generic class for HMAC testing.
@@ -14,43 +15,43 @@ class GenericHMACTest:
 
     GOOD_PRIVATE_KEY = b'\xd6\xec\xf4xK\x87V2\xbbY\xc2\xbfL)p\xc3"\xb4\x98\xccd@\xd0\x8b\xd7\xfc\xb0\xdd!\xf7.\xdc\x99\xfah~\xd6\xfd\x14\x92\xb4\xb46~\xed\x06\x11Q8\x88RyC\xef\xd2\xf4\xe0\t\xaf\xbe\xe0zB\xee\x81\x93\xb2\x1b\xf6\xa7\x02\xce\x958\xf89#q\xa6\x16\xef~D\xa0g\x1b\x9c\x7f\xa8\x956jV^S\x1aO|\xa1\xb3\x02|\x94/\xfc\xbf \xcc\xa4%\xa1\x986\xb4\xab\x81\x98\x14a\xdb\x0c\xf0\x15|"\xfdH\x95'
 
-    HMAC_CLASS = None
+    HASH_CLASS = None
 
     def test_pkey_type(self):
         bad_pkey = 'lalalalala'
         with pytest.raises(ValueError):
-            mac = self.HMAC_CLASS.new(bad_pkey)
+            mac = HMAC.new(self.HASH_CLASS, bad_pkey)
 
     def test_sign_data_type(self):
-        mac = self.HMAC_CLASS.new(self.GOOD_PRIVATE_KEY)
+        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
         with pytest.raises(ValueError):
             mac.sign(12345)
 
     def test_verify_data_type(self):
-        mac = self.HMAC_CLASS.new(self.GOOD_PRIVATE_KEY)
+        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
         with pytest.raises(ValueError):
-            mac.verify(12345, b'\x11' * self.HMAC_CLASS._DIGEST_LENGTH)
+            mac.verify(12345, b'\x11' * mac.sign_size())
 
     def test_verify_signature_type(self):
-        mac = self.HMAC_CLASS.new(self.GOOD_PRIVATE_KEY)
+        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
         with pytest.raises(ValueError):
             mac.verify(self.GOOD_STRING, 12345)
 
     def test_sign_verify(self):
-        mac = self.HMAC_CLASS.new(self.GOOD_PRIVATE_KEY)
+        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
         signature = mac.sign(self.GOOD_STRING)
         assert mac.verify(self.GOOD_STRING, signature)
 
     def test_tampered_signature(self):
-        mac = self.HMAC_CLASS.new(self.GOOD_PRIVATE_KEY)
-        bad_signature = b'\x11'*self.HMAC_CLASS._DIGEST_LENGTH
+        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
+        bad_signature = b'\x11'*mac.sign_size()
         assert not mac.verify(self.GOOD_STRING, bad_signature)
 
     def test_signature_size(self):
-        mac = self.HMAC_CLASS.new(self.GOOD_PRIVATE_KEY)
+        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
         signature = mac.sign(self.GOOD_STRING)
-        assert len(signature) == self.HMAC_CLASS._DIGEST_LENGTH
+        assert len(signature) == mac.sign_size()
 
 
 class TestHMACStreebog512(GenericHMACTest):
-    HMAC_CLASS = HMACStreebog512
+    HASH_CLASS = Streebog512
