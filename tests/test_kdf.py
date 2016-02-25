@@ -1,5 +1,5 @@
-import cryptomodule.kdf as kdf
-import cryptomodule.digest as dgst
+import pylibressl.kdf as kdf
+import pylibressl.digest as dgst
 import pytest
 
 class TestPBKDF2:

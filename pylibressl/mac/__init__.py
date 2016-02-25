@@ -3,14 +3,14 @@ Crypto signing: HMAC etc.
 
 Signing example:
 
->>> from cryptomodule.mac import HMACStreebog512
+>>> from pylibressl.mac import HMACStreebog512
 >>> data = b'Some data to sign'
 >>> private_key = b'Some private key 12345678990asdfghjkl'
 >>> signature = HMACStreebog512.new(private_key).sign(data)
 
 Verifying example:
 
->>> from cryptomodule.mac import HMACStreebog512
+>>> from pylibressl.mac import HMACStreebog512
 >>> data = b'Some data to verify'
 >>> private_key = b'Some private key 12345678990asdfghjkl'
 >>> signature = b'signature'

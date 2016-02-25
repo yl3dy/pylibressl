@@ -1,11 +1,11 @@
 from .. import lib
 from ..exceptions import *
-from .. import _cryptomodule
+from .. import _libressl
 from ..cipher import AES256_CTR
 from ..cipher.cipher import _CipherOrdinary
 from .keypair import RSAKeypair
 
-ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+ffi, clib = _libressl.ffi, _libressl.lib
 
 class RSACrypt(object):
     """RSA en/decryption class."""

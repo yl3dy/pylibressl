@@ -1,7 +1,7 @@
 """
 CFFI building options, cdefs and source.
 
-To manually compile C module, run `python3 cryptomodule/build.py`.
+To manually compile C module, run `python3 pylibressl/build.py`.
 
 """
 import os
@@ -187,7 +187,7 @@ int _wrap_EVP_OpenUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
 
 ffi = cffi.FFI()
 ffi.cdef(cdef)
-ffi.set_source('cryptomodule._cryptomodule', src,
+ffi.set_source('pylibressl._libressl', src,
                libraries=LIBRARIES, library_dirs=LIBRARY_DIRS,
                include_dirs=INCLUDE_DIRS, sources=SOURCES,
                extra_compile_args=EXTRA_COMPILE_ARGS,

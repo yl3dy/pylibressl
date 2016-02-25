@@ -4,3 +4,4 @@ _*
 *.vim
 *.o
 .cache
+*.egg

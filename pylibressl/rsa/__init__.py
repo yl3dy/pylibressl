@@ -6,7 +6,7 @@ wrapper class to store RSA keypair.
 
 Example:
 
->>> from cryptomodule.rsa import RSAKeypair, RSASign
+>>> from pylibressl.rsa import RSAKeypair, RSASign
 >>>
 >>> privkey = open('private_key.pem', 'rb').read()
 >>> keypair = RSAKeypair(private_key=privkey)

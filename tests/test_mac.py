@@ -1,7 +1,7 @@
 import pytest
-from cryptomodule.mac import HMAC
-from cryptomodule.digest import Streebog512
-from cryptomodule.exceptions import LibreSSLError
+from pylibressl.mac import HMAC
+from pylibressl.digest import Streebog512
+from pylibressl.exceptions import LibreSSLError
 
 class GenericHMACTest:
     """Generic class for HMAC testing.

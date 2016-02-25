@@ -1,9 +1,9 @@
 from .. import lib
 from ..exceptions import *
-from .. import _cryptomodule
+from .. import _libressl
 from ..digest.digest import _Hash
 
-ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+ffi, clib = _libressl.ffi, _libressl.lib
 
 class HMAC(object):
     """Generic HMAC class."""

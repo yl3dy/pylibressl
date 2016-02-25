@@ -1,7 +1,7 @@
-import cryptomodule.rsa as rsa
-import cryptomodule.cipher as cipher
-from cryptomodule.exceptions import *
-from cryptomodule.digest import Streebog512
+import pylibressl.rsa as rsa
+import pylibressl.cipher as cipher
+from pylibressl.exceptions import *
+from pylibressl.digest import Streebog512
 import pytest
 import os
 

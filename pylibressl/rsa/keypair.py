@@ -1,8 +1,8 @@
 from .. import lib
 from ..exceptions import *
-from .. import _cryptomodule
+from .. import _libressl
 
-ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+ffi, clib = _libressl.ffi, _libressl.lib
 
 class RSAKeypair(object):
     """RSA keypair container."""

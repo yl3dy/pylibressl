@@ -1,8 +1,8 @@
 from .. import lib
 from ..exceptions import *
-from .. import _cryptomodule
+from .. import _libressl
 
-ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+ffi, clib = _libressl.ffi, _libressl.lib
 
 class _Hash(object):
     """Generic hash object.
@@ -17,7 +17,7 @@ class _Hash(object):
     _HASH_ID = None
     # Maximum LibreSSL hash size. Not optimal, but the size is not very big
     # anyway.
-    _MAX_HASH_SIZE = _cryptomodule.lib.EVP_MAX_MD_SIZE
+    _MAX_HASH_SIZE = clib.EVP_MAX_MD_SIZE
 
     @classmethod
     def new(cls, data=None):

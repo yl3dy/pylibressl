@@ -1,7 +1,7 @@
 import pytest
-from cryptomodule.cipher import GOST89_CTR, AES256_CTR, AES256_CBC, AES256_GCM
-from cryptomodule.cipher import MODE_CTR, MODE_CBC, MODE_GCM
-from cryptomodule.exceptions import AuthencityError, LibreSSLError
+from pylibressl.cipher import GOST89_CTR, AES256_CTR, AES256_CBC, AES256_GCM
+from pylibressl.cipher import MODE_CTR, MODE_CBC, MODE_GCM
+from pylibressl.exceptions import AuthencityError, LibreSSLError
 
 class GenericOrdinaryCipherTest:
     """Base class for ordinary cipher tests.

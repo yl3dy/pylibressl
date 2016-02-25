@@ -7,10 +7,10 @@ quiet_test:
 	python3 -m pytest -q
 
 devbuild:
-	python3 cryptomodule/build.py
+	python3 pylibressl/build.py
 
 # Drop .pyc and compiled module
 clean:
-	rm cryptomodule/__pycache__/*
-	rm cryptomodule/*/__pycache__/*
-	rm cryptomodule/_cryptomodule*
+	rm pylibressl/__pycache__/* || true
+	rm pylibressl/*/__pycache__/* || true
+	rm pylibressl/_cryptomodule* || true

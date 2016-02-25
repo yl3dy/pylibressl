@@ -1,11 +1,11 @@
 from .. import lib
 from ..exceptions import *
-from .. import _cryptomodule
+from .. import _libressl
 from .keypair import RSAKeypair
 from ..digest.digest import _Hash
 from ..digest import SHA512
 
-ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
+ffi, clib = _libressl.ffi, _libressl.lib
 
 class RSASign(object):
     """RSA signing class."""

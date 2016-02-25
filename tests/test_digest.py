@@ -1,4 +1,4 @@
-import cryptomodule.digest as dgst
+import pylibressl.digest as dgst
 import pytest
 
 class GenericHashTest:

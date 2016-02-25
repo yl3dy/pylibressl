@@ -1,7 +1,9 @@
 from .. import lib
 from ..exceptions import *
-from .. import _cryptomodule
+from .. import _libressl
 from ..digest.digest import _Hash
+
+ffi, clib = _libressl.ffi, _libressl.lib
 
 class PBKDF_HMAC(object):
     @classmethod
@@ -16,8 +18,6 @@ class PBKDF_HMAC(object):
         return pbkdf
 
     def __init__(self, salt, iteration_number, key_length, hash_type):
-        ffi = _cryptomodule.ffi
-
         self._c_salt = ffi.new('unsigned char[]', salt)
         self._c_salt_len = len(salt)
         self._iter_num = iteration_number
@@ -28,8 +28,6 @@ class PBKDF_HMAC(object):
         """Derivate key from a password."""
         if type(password) != type(b''):
             raise ValueError('Password should be a byte string')
-
-        ffi, clib = _cryptomodule.ffi, _cryptomodule.lib
 
         c_passw = ffi.new('const char[]', password)
         c_out_key = ffi.new('unsigned char[]', self._keylen)
