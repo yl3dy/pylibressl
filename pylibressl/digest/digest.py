@@ -81,3 +81,6 @@ class Streebog512(_Hash):
 class SHA512(_Hash):
     """SHA512 hash."""
     _HASH_ID = clib.EVP_sha512()
+
+class SHA256(_Hash):
+    _HASH_ID = clib.EVP_sha256()

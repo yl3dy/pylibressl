@@ -3,13 +3,12 @@ Key derivation algorithms.
 
 Usage example:
 
->>> from pylibressl.kdf import PBKDF_HMAC
->>> from pylibressl.digest import SHA512
+>>> from pylibressl.kdf import PBKDF_HMAC_SHA256
 >>> password = b'qwerty123'
->>> key = PBKDF_HMAC.new(b'Salt', 8192, 64, SHA512).derivate(password)
+>>> key = PBKDF_HMAC_SHA256(b'Salt', 8192, 64).derivate(password)
 
 """
 
-from .pbkdf import PBKDF_HMAC
+from .pbkdf import PBKDF_HMAC, PBKDF_HMAC_SHA256, PBKDF_HMAC_Streebog512
 
-__all__ = ['PBKDF_HMAC']
+__all__ = ['PBKDF_HMAC', 'PBKDF_HMAC_SHA256', 'PBKDF_HMAC_Streebog512']

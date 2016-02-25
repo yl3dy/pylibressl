@@ -39,6 +39,7 @@ typedef ... EVP_MD_CTX;
 
 const EVP_MD* EVP_streebog512(void);
 const EVP_MD* EVP_sha512(void);
+const EVP_MD* EVP_sha256(void);
 
 EVP_MD_CTX *EVP_MD_CTX_create(void);
 int EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type, ENGINE *impl);

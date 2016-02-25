@@ -2,27 +2,28 @@ from .. import lib
 from ..exceptions import *
 from .. import _libressl
 from ..digest.digest import _Hash
+from ..digest import Streebog512, SHA256
 
 ffi, clib = _libressl.ffi, _libressl.lib
 
 class PBKDF_HMAC(object):
     @classmethod
-    def new(cls, salt, iteration_number, key_length, hash_type):
+    def new(cls, hash_type):
         """Create new PBKDF object."""
-        if type(salt) != type(b''):
-            raise ValueError('Salt should be a byte string')
         if not issubclass(hash_type, _Hash):
             raise ValueError('Hash type should be _Hash instance')
 
-        pbkdf = cls(salt, iteration_number, key_length, hash_type)
-        return pbkdf
+        cls._hash_id = hash_type._HASH_ID
+        return cls
 
-    def __init__(self, salt, iteration_number, key_length, hash_type):
+    def __init__(self, salt, iteration_number, key_length):
+        if type(salt) != type(b''):
+            raise ValueError('Salt should be a byte string')
+
         self._c_salt = ffi.new('unsigned char[]', salt)
         self._c_salt_len = len(salt)
         self._iter_num = iteration_number
         self._keylen = key_length
-        self._hash_id = hash_type._HASH_ID
 
     def derivate(self, password):
         """Derivate key from a password."""
@@ -41,3 +42,9 @@ class PBKDF_HMAC(object):
 
         derived_key = lib.retrieve_bytes(c_out_key, self._keylen)
         return derived_key
+
+PBKDF_HMAC_Streebog512 = PBKDF_HMAC.new(Streebog512)
+PBKDF_HMAC_Streebog512.__doc__ = 'PBKDF-HMAC-Streebog512'
+
+PBKDF_HMAC_SHA256 = PBKDF_HMAC.new(SHA256)
+PBKDF_HMAC_SHA256.__doc__ = 'PBKDF-HMAC-SHA256'

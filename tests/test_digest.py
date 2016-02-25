@@ -49,6 +49,12 @@ class GenericHashTest:
 
         assert hash_long == hash_seq
 
+class TestSHA256(GenericHashTest):
+    HASH_CLASS = dgst.SHA256
+    HASH_LENGTH = 32
+    GOOD_STRING = b'abcdefghijklmnopqrstvwxyz1234567890'
+    GOOD_HASH = b'[(z)\xae2\xa1z\xb2m\x05\xf6\xcf\xd4\x891\x04U\xa2\xe8\x0b\xf9va\xfc\xe1\x1a\xb4eO\xe1\xc6'
+
 class TestStreebog512(GenericHashTest):
     HASH_CLASS = dgst.Streebog512
     HASH_LENGTH = 64
