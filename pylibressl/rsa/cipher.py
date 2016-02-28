@@ -2,7 +2,7 @@ from .. import lib
 from ..exceptions import *
 from .. import _libressl
 from ..cipher import AES256_CTR
-from ..cipher.cipher import _CipherOrdinary
+from ..cipher.noauth import BaseCipherNoauth
 from .keypair import RSAKeypair
 
 ffi, clib = _libressl.ffi, _libressl.lib
@@ -15,8 +15,8 @@ class RSACrypt(object):
         """Create new en/decryption object."""
         if not isinstance(keypair, RSAKeypair):
             raise ValueError('Keypair should be RSAKeypair instance')
-        if not issubclass(symmetric_cipher, _CipherOrdinary):
-            raise ValueError('Symmetric cipher should be _CipherOrdinary subclass')
+        if not issubclass(symmetric_cipher, BaseCipherNoauth):
+            raise ValueError('Symmetric cipher should be BaseCipherNoauth subclass')
 
         rsacrypt = cls(keypair, symmetric_cipher)
         return rsacrypt
