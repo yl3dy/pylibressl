@@ -45,9 +45,7 @@ class HMAC(object):
         if status != 1:
             raise LibreSSLError(lib.get_libressl_error())
 
-        # FIXME: really, EVP_DigestSignUpdate should be here, but it is a macro
-        # so cffi can't parse it.
-        status = clib.EVP_DigestUpdate(digest_ctx, c_msg, len(data))
+        status = clib._wrap_EVP_DigestSignUpdate(digest_ctx, c_msg, len(data))
         if status != 1:
             raise LibreSSLError(lib.get_libressl_error())
 
