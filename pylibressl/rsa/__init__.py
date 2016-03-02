@@ -23,7 +23,8 @@ Example:
 """
 
 from .keypair import RSAKeypair
-from .sign import RSASign
-from .cipher import RSACrypt
+from .sign import RSASign, RSASign_SHA512
+from .cipher import RSACrypt, RSACrypt_AES256
 
-__all__ = ['RSAKeypair', 'RSASign', 'RSACrypt']
+__all__ = ['RSAKeypair', 'RSASign', 'RSACrypt', 'RSASign_SHA512',
+           'RSACrypt_AES256']

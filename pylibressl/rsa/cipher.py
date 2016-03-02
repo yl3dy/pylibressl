@@ -11,19 +11,19 @@ class RSACrypt(object):
     """RSA en/decryption class."""
 
     @classmethod
-    def new(cls, keypair, symmetric_cipher=AES256_CTR):
-        """Create new en/decryption object."""
-        if not isinstance(keypair, RSAKeypair):
-            raise ValueError('Keypair should be RSAKeypair instance')
+    def new(cls, symmetric_cipher):
+        """Create new RSA cipher class."""
         if not issubclass(symmetric_cipher, BaseCipherNoauth):
             raise ValueError('Symmetric cipher should be BaseCipherNoauth subclass')
 
-        rsacrypt = cls(keypair, symmetric_cipher)
-        return rsacrypt
+        cls._cipher_type = symmetric_cipher
+        return cls
 
-    def __init__(self, keypair, symmetric_cipher):
+    def __init__(self, keypair):
+        """Create Rsa ciphering object."""
+        if not isinstance(keypair, RSAKeypair):
+            raise ValueError('Keypair should be RSAKeypair instance')
         self._keypair = keypair
-        self._cipher_type = symmetric_cipher
 
     def encrypt(self, data):
         if type(data) != type(b''):
@@ -106,3 +106,5 @@ class RSACrypt(object):
 
         message = lib.retrieve_bytes(c_msg, msg_len)
         return message
+
+RSACrypt_AES256 = RSACrypt.new(AES256_CTR)

@@ -15,35 +15,35 @@ class GenericHashTest:
     """
 
     def test_output_length(self):
-        hash = self.HASH_CLASS.new(self.GOOD_STRING).digest()
+        hash = self.HASH_CLASS(self.GOOD_STRING).digest()
         assert len(hash) == self.HASH_LENGTH
 
     def test_wrong_type_input(self):
         bad_string = 'lorem ipsum'
         with pytest.raises(ValueError):
-            hash = self.HASH_CLASS.new(bad_string)
+            hash = self.HASH_CLASS(bad_string)
 
     def test_fast_init(self):
-        hash_fast = self.HASH_CLASS.new(self.GOOD_STRING)
-        hash_seq = self.HASH_CLASS.new()
+        hash_fast = self.HASH_CLASS(self.GOOD_STRING)
+        hash_seq = self.HASH_CLASS()
         hash_seq.update(self.GOOD_STRING)
         assert hash_fast.digest() == hash_seq.digest()
 
     def test_digest_type(self):
-        hash = self.HASH_CLASS.new(self.GOOD_STRING).digest()
+        hash = self.HASH_CLASS(self.GOOD_STRING).digest()
         assert type(hash) == type(b'')
 
     def test_good_string(self):
-        hash = self.HASH_CLASS.new(self.GOOD_STRING).digest()
+        hash = self.HASH_CLASS(self.GOOD_STRING).digest()
         assert hash == self.GOOD_HASH
 
     def test_append_data(self):
         good_string_2 = b'lorem ipsum \x12\xfa'
         good_string_long = self.GOOD_STRING + good_string_2
 
-        hash_long = self.HASH_CLASS.new(good_string_long).digest()
+        hash_long = self.HASH_CLASS(good_string_long).digest()
 
-        hash_inst = self.HASH_CLASS.new(self.GOOD_STRING)
+        hash_inst = self.HASH_CLASS(self.GOOD_STRING)
         hash_inst.update(good_string_2)
         hash_seq = hash_inst.digest()
 

@@ -9,17 +9,19 @@ class HMAC(object):
     """Generic HMAC class."""
 
     @classmethod
-    def new(cls, hash_type, private_key):
-        """Create new HMAC instance."""
-        if type(private_key) != type(b''):
-            raise ValueError('Private key should be a byte string')
+    def new(cls, hash_type):
+        """Create new HMAC class with specified digest."""
         if not issubclass(hash_type, _Hash):
             raise ValueError('Hash type should be a _Hash subclass')
 
-        mac = cls(hash_type, private_key)
-        return mac
+        cls._digest_type = hash_type
+        return cls
 
-    def __init__(self, hash_type, private_key):
+    def __init__(self, private_key):
+        """Create new HMAC instance."""
+        if type(private_key) != type(b''):
+            raise ValueError('Private key should be a byte string')
+
         # Set private key
         c_private_key = ffi.new('unsigned char[]', private_key)
         self._c_pkey = ffi.gc(clib.EVP_PKEY_new_mac_key(clib.EVP_PKEY_HMAC,
@@ -30,10 +32,8 @@ class HMAC(object):
         if self._c_pkey == ffi.NULL:
             raise LibreSSLError(lib.get_libressl_error())
 
-        self._digest_type = hash_type
-
     def _sign(self, data):
-        digest_instance = self._digest_type.new()
+        digest_instance = self._digest_type()
         digest_ctx = digest_instance._c_digest_ctx   # shorthand
         c_msg = ffi.new('unsigned char[]', data)
         c_signature = ffi.new('unsigned char[]', self._digest_type.size())

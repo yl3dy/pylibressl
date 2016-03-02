@@ -15,19 +15,9 @@ class _Hash(object):
     # Cdata containing EVP_MD digest identifier. Children should set this value
     # to an appropriate one.
     _HASH_ID = None
-    # Maximum LibreSSL hash size. Not optimal, but the size is not very big
-    # anyway.
-    _MAX_HASH_SIZE = clib.EVP_MAX_MD_SIZE
 
-    @classmethod
-    def new(cls, data=None):
+    def __init__(self, data=None):
         """Create new hash instance."""
-        hash = cls()
-        if data:
-            hash.update(data)
-        return hash
-
-    def __init__(self):
         self._c_digest_ctx = ffi.gc(clib.EVP_MD_CTX_create(),
                                     clib.EVP_MD_CTX_destroy)
         if self._c_digest_ctx == ffi.NULL:
@@ -37,6 +27,9 @@ class _Hash(object):
                                         ffi.NULL)
         if status != 1:
             raise LibreSSLError(lib.get_libressl_error())
+
+        if data:
+            self.update(data)
 
     def update(self, data):
         """Append more data to digest."""
@@ -72,6 +65,11 @@ class _Hash(object):
     def block_size(cls):
         """Return block size of digest in bytes."""
         return clib.EVP_MD_block_size(cls._HASH_ID)
+
+    @classmethod
+    def max_size(cls):
+        """Maximum hash size supported by LibreSSL."""
+        return clib.EVP_MAX_MD_SIZE
 
 
 class Streebog512(_Hash):

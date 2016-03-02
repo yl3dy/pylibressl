@@ -33,7 +33,7 @@ class CipherHMAC(BaseCipherAuth):
     def __init__(self, key, iv):
         """Initialize cipher+HMAC with key and IV."""
         self._cipher = self.CIPHER_TYPE(key, iv)
-        self._hmac = HMAC.new(self.HASH_TYPE, key)
+        self._hmac = HMAC.new(self.HASH_TYPE)(key)
 
     def encrypt(self, data):
         """Encrypt a message.

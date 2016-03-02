@@ -11,26 +11,26 @@ class RSASign(object):
     """RSA signing class."""
 
     @classmethod
-    def new(cls, rsa_keypair, digest_type=SHA512):
-        """Create new RSA signing object."""
-        if not isinstance(rsa_keypair, RSAKeypair):
-            raise ValueError('Keypair should be RSAKeypair instance')
+    def new(cls, digest_type):
+        """Create new RSA signing class."""
         if not issubclass(digest_type, _Hash):
             raise ValueError('Digest type must be a _Hash subclass')
 
-        rsa_sign = cls(rsa_keypair, digest_type)
-        return rsa_sign
+        cls._digest_type = digest_type
+        return cls
 
-    def __init__(self, rsa_keypair, digest_type):
+    def __init__(self, rsa_keypair):
+        """Create RSA signing object."""
+        if not isinstance(rsa_keypair, RSAKeypair):
+            raise ValueError('Keypair should be RSAKeypair instance')
         self._keypair = rsa_keypair
-        self._digest_type = digest_type
 
     def sign(self, message):
         """Sign a message with RSA."""
         if type(message) != type(b''):
             raise ValueError('Message should be a byte string')
 
-        digest = self._digest_type.new()
+        digest = self._digest_type()
         c_digest_ctx = digest._c_digest_ctx
         c_pkey = self._keypair._c_pkey
         c_hash_id = self._digest_type._HASH_ID
@@ -68,7 +68,7 @@ class RSASign(object):
             raise ValueError("Keypair doesn't contain private key, " + \
                              "verification impossible")
 
-        digest = self._digest_type.new()
+        digest = self._digest_type()
         c_digest_ctx = digest._c_digest_ctx
         c_pkey = self._keypair._c_pkey
         c_hash_id = self._digest_type._HASH_ID
@@ -95,3 +95,5 @@ class RSASign(object):
             return False
         else:
             raise LibreSSLError(lib.get_libressl_error())
+
+RSASign_SHA512 = RSASign.new(SHA512)

@@ -19,36 +19,43 @@ class GenericHMACTest:
 
     def test_pkey_type(self):
         bad_pkey = 'lalalalala'
+        mac_cls = HMAC.new(self.HASH_CLASS)
         with pytest.raises(ValueError):
-            mac = HMAC.new(self.HASH_CLASS, bad_pkey)
+            mac = mac_cls(bad_pkey)
 
     def test_sign_data_type(self):
-        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
+        mac_cls = HMAC.new(self.HASH_CLASS)
+        mac = mac_cls(self.GOOD_PRIVATE_KEY)
         with pytest.raises(ValueError):
             mac.sign(12345)
 
     def test_verify_data_type(self):
-        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
+        mac_cls = HMAC.new(self.HASH_CLASS)
+        mac = mac_cls(self.GOOD_PRIVATE_KEY)
         with pytest.raises(ValueError):
             mac.verify(12345, b'\x11' * mac.sign_size())
 
     def test_verify_signature_type(self):
-        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
+        mac_cls = HMAC.new(self.HASH_CLASS)
+        mac = mac_cls(self.GOOD_PRIVATE_KEY)
         with pytest.raises(ValueError):
             mac.verify(self.GOOD_STRING, 12345)
 
     def test_sign_verify(self):
-        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
+        mac_cls = HMAC.new(self.HASH_CLASS)
+        mac = mac_cls(self.GOOD_PRIVATE_KEY)
         signature = mac.sign(self.GOOD_STRING)
         assert mac.verify(self.GOOD_STRING, signature)
 
     def test_tampered_signature(self):
-        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
+        mac_cls = HMAC.new(self.HASH_CLASS)
+        mac = mac_cls(self.GOOD_PRIVATE_KEY)
         bad_signature = b'\x11'*mac.sign_size()
         assert not mac.verify(self.GOOD_STRING, bad_signature)
 
     def test_signature_size(self):
-        mac = HMAC.new(self.HASH_CLASS, self.GOOD_PRIVATE_KEY)
+        mac_cls = HMAC.new(self.HASH_CLASS)
+        mac = mac_cls(self.GOOD_PRIVATE_KEY)
         signature = mac.sign(self.GOOD_STRING)
         assert len(signature) == mac.sign_size()
 
