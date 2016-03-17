@@ -13,8 +13,10 @@ class PBKDF_HMAC(object):
         if not issubclass(hash_type, _Hash):
             raise ValueError('Hash type should be _Hash instance')
 
-        cls._hash_id = hash_type._HASH_ID
-        return cls
+        class new_pbkdf_hmac(cls):
+            _hash_id = hash_type._HASH_ID
+
+        return new_pbkdf_hmac
 
     def __init__(self, salt, iteration_number, key_length):
         if type(salt) != type(b''):

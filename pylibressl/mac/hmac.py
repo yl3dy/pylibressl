@@ -14,8 +14,10 @@ class HMAC(object):
         if not issubclass(hash_type, _Hash):
             raise ValueError('Hash type should be a _Hash subclass')
 
-        cls._digest_type = hash_type
-        return cls
+        class new_hmac(cls):
+            _digest_type = hash_type
+
+        return new_hmac
 
     def __init__(self, private_key):
         """Create new HMAC instance."""

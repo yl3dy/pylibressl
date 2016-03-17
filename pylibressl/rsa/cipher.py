@@ -16,8 +16,9 @@ class RSACrypt(object):
         if not issubclass(symmetric_cipher, BaseCipherNoauth):
             raise ValueError('Symmetric cipher should be BaseCipherNoauth subclass')
 
-        cls._cipher_type = symmetric_cipher
-        return cls
+        class new_rsa_cipher(cls):
+            _cipher_type = symmetric_cipher
+        return new_rsa_cipher
 
     def __init__(self, keypair):
         """Create Rsa ciphering object."""

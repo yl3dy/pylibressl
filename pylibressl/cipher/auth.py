@@ -26,9 +26,11 @@ class CipherHMAC(BaseCipherAuth):
         if not issubclass(hash_type, _Hash):
             raise ValueError('Wrong hash type')
 
-        cls.CIPHER_TYPE = cipher_type
-        cls.HASH_TYPE = hash_type
-        return cls
+        class new_cipher_hmac(cls):
+            CIPHER_TYPE = cipher_type
+            HASH_TYPE = hash_type
+
+        return new_cipher_hmac
 
     def __init__(self, key, iv):
         """Initialize cipher+HMAC with key and IV."""

@@ -16,8 +16,9 @@ class RSASign(object):
         if not issubclass(digest_type, _Hash):
             raise ValueError('Digest type must be a _Hash subclass')
 
-        cls._digest_type = digest_type
-        return cls
+        class new_rsa_sign(cls):
+            _digest_type = digest_type
+        return new_rsa_sign
 
     def __init__(self, rsa_keypair):
         """Create RSA signing object."""
