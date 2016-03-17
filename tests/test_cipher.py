@@ -3,6 +3,7 @@ from pylibressl.cipher import GOST89_CTR, AES256_CTR, AES256_CBC, AES256_GCM
 from pylibressl.cipher import MODE_CTR, MODE_CBC, MODE_GCM
 from pylibressl.exceptions import AuthencityError, LibreSSLError
 from pylibressl.cipher import CipherHMAC, GOST89_HMAC_Streebog512
+from pylibressl.cipher import OnionCipher, Onion_AES256_GOST89
 
 class GenericOrdinaryCipherTest:
     """Base class for ordinary cipher tests.
@@ -219,3 +220,35 @@ class TestCipherHMAC:
         with pytest.raises(AuthencityError):
             dec = cipher_ae.decrypt(enc, bad_auth_code)
 
+class TestOnionCipher:
+    good_string = b'QY\xf4\xff\x9e\xee\xe2\xad\xcf\xf8\xf5\xf5\xddm\x18z\xbbp\xb83\x8aZ\x9a\x9a\x81\xfd\x10?\xac\xd3\xf9\xfcE\x81*\xeda\xf9i\xce\xd9\xe6\xecH\xdf\xe3\x1c}\x18\x16\x06bJ\xcb\xd7\x1b\x90\x04j\xe3\xe3\x05d\x86\xfe\x91\x13I\xb7\xf3\x869M\x16.\x03\xcf\xdf\x99\xa0`l\xcf\x06\xc7\xa1\x86xd\x0c\xa0\xd3\xbf\x8ct\t=\x8c\xe0\x05\xe2\xa2\xea18$b\t\xbf\xbe#o\xeb\x8f\xa8?\x89\x8aI\xa6\x00\x97\x0c\x99\xe7\xfe\x0bI'
+
+    def test_encrypt_decrypt_preset(self):
+        key_aes = b'\x12'*AES256_CTR.key_length()
+        iv_aes = b'\xf0'*AES256_CTR.iv_length()
+        key_gost = b'\x3d'*GOST89_CTR.key_length()
+        iv_gost = b'\xac'*GOST89_CTR.iv_length()
+
+        key_list = [(key_aes, iv_aes), (key_gost, iv_gost)]
+
+        onion_cipher = Onion_AES256_GOST89(key_list)
+        enc_msg, auth_codes = onion_cipher.encrypt(self.good_string)
+        assert self.good_string == onion_cipher.decrypt(enc_msg, auth_codes)
+
+    def test_encrypt_decrypt_noauth(self):
+        onion_cipher_cls = OnionCipher.new((AES256_CBC, AES256_CTR))
+        key_aes_1 = b'\x12'*AES256_CBC.key_length()
+        iv_aes_1 = b'\xf0'*AES256_CBC.iv_length()
+        key_aes_2 = b'\x3d'*AES256_CTR.key_length()
+        iv_aes_2 = b'\xac'*AES256_CTR.iv_length()
+        key_list = [(key_aes_1, iv_aes_1), (key_aes_2, iv_aes_2)]
+
+        onion_cipher = onion_cipher_cls(key_list)
+        enc_msg, auth_codes = onion_cipher.encrypt(self.good_string)
+        assert self.good_string == onion_cipher.decrypt(enc_msg, auth_codes)
+        assert auth_codes == [None, None]
+
+    def test_wrong_key_list(self):
+        key_list = [(b'asdf', b'23456789')]
+        with pytest.raises(ValueError):
+            onion_cipher = Onion_AES256_GOST89(key_list)
