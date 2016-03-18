@@ -38,9 +38,9 @@ class RSASign(object):
 
         c_msg = ffi.new('unsigned char[]', message)
         c_msg_len = len(message)
-        c_signature = ffi.new('unsigned char[]', 16384)  # FIXME
+        c_signature = ffi.new('unsigned char[]', self._keypair.key_size())
         c_signature_len = ffi.new('size_t*')
-        c_signature_len[0] = 16384   # FIXME
+        c_signature_len[0] = self._keypair.key_size()
 
         status = clib.EVP_DigestSignInit(c_digest_ctx, ffi.NULL,
                                          c_hash_id, ffi.NULL, c_pkey)

@@ -10,8 +10,10 @@ TEST_PATH = os.path.abspath(os.path.dirname(__file__))
 class TestRSAKeypair:
     """Test RSA keypair container."""
 
-    private_key = open(os.path.join(TEST_PATH, 'rsa_private.pem'), 'rb').read()
-    public_key = open(os.path.join(TEST_PATH, 'rsa_public.pem'), 'rb').read()
+    private_key = open(os.path.join(TEST_PATH, 'rsa_keys/private_2048.pem'), 'rb').read()
+    public_key = open(os.path.join(TEST_PATH, 'rsa_keys/public_2048.pem'), 'rb').read()
+    private_key_2 = open(os.path.join(TEST_PATH, 'rsa_keys/private_1024.pem'), 'rb').read()
+    public_key_2 = open(os.path.join(TEST_PATH, 'rsa_keys/public_1024.pem'), 'rb').read()
 
     def test_normal_init_private_public(self):
         kp = rsa.RSAKeypair(public_key=self.public_key,
@@ -37,15 +39,32 @@ class TestRSAKeypair:
             kp = rsa.RSAKeypair(public_key=bad_public_key,
                                 private_key=bad_private_key)
 
+    def test_key_size(self):
+        kp_2048 = rsa.RSAKeypair(public_key=self.public_key,
+                                 private_key=self.private_key)
+        kp_1024 = rsa.RSAKeypair(public_key=self.public_key_2,
+                                 private_key=self.private_key_2)
+        assert kp_2048.key_size() == 256
+        assert kp_1024.key_size() == 128
+
+
+
 class TestRSASign:
     """Test RSA signing."""
 
-    private_key = open(os.path.join(TEST_PATH, 'rsa_private.pem'), 'rb').read()
-    public_key = open(os.path.join(TEST_PATH, 'rsa_public.pem'), 'rb').read()
+    private_key = open(os.path.join(TEST_PATH, 'rsa_keys/private_2048.pem'), 'rb').read()
+    public_key = open(os.path.join(TEST_PATH, 'rsa_keys/public_2048.pem'), 'rb').read()
+    private_key_2 = open(os.path.join(TEST_PATH, 'rsa_keys/private_1024.pem'), 'rb').read()
     good_message = b'This is a good message to sign'*100
 
     def test_sign_verify(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
+        signer = rsa.RSASign_SHA512(kp)
+        signature = signer.sign(self.good_message)
+        assert signer.verify(self.good_message, signature)
+
+    def test_sign_verify_different_keylength(self):
+        kp = rsa.RSAKeypair(private_key=self.private_key_2)
         signer = rsa.RSASign_SHA512(kp)
         signature = signer.sign(self.good_message)
         assert signer.verify(self.good_message, signature)
@@ -106,8 +125,8 @@ class TestRSASign:
 
 class TestRSACrypt:
     good_msg = b'Some message to asymmetrically encrypt. 1234567890'
-    private_key = open(os.path.join(TEST_PATH, 'rsa_private.pem'), 'rb').read()
-    public_key = open(os.path.join(TEST_PATH, 'rsa_public.pem'), 'rb').read()
+    private_key = open(os.path.join(TEST_PATH, 'rsa_keys/private_2048.pem'), 'rb').read()
+    public_key = open(os.path.join(TEST_PATH, 'rsa_keys/public_2048.pem'), 'rb').read()
 
     def test_encrypt_decrypt(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)

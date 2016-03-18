@@ -32,8 +32,7 @@ class RSACrypt(object):
 
         c_msg = ffi.new('unsigned char[]', data)
         c_msg_len = len(data)
-        # FIXME: here should be length of RSA key in bytes
-        c_session_key = ffi.new('unsigned char[]', 256)
+        c_session_key = ffi.new('unsigned char[]', self._keypair.key_size())
         c_session_key_len = ffi.new('int*')
         c_iv = ffi.new('unsigned char[]', self._cipher_type.iv_length())
         c_enc_msg = ffi.new('unsigned char[]', 2*c_msg_len)

@@ -1,0 +1,5 @@
+To generate RSA keypair, do the following (replace 1024 with desired key
+length):
+
+$ openssl genrsa -out private_1024.pem 1024
+$ openssl rsa -in private_1024.pem -RSAPublicKey_out -out public_1024.pem

@@ -38,6 +38,15 @@ class RSAKeypair(object):
         if c_rsa == ffi.NULL:
             raise LibreSSLError(lib.get_libressl_error())
 
+        modulus_size = clib.RSA_size(c_rsa)
+        if modulus_size <= 0:
+            raise LibreSSLError(lib.get_libressl_error())
+        if hasattr(self, '_modulus_size'):
+            if self._modulus_size != modulus_size:
+                raise LibreSSLError
+        else:
+            self._modulus_size = modulus_size
+
         status = clib.EVP_PKEY_set1_RSA(self._c_pkey, c_rsa)
         if status != 1:
             raise LibreSSLError(lib.get_libressl_error())
@@ -54,3 +63,7 @@ class RSAKeypair(object):
     def has_private_key(self):
         """Returns True if private key is present in keypair."""
         return self._is_privkey_present
+
+    def key_size(self):
+        """Get key size (actually, modulus length) in bytes."""
+        return self._modulus_size

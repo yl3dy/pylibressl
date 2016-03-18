@@ -133,6 +133,7 @@ RSA *PEM_read_bio_RSAPublicKey(BIO *bp, RSA **x,
                     pem_password_cb *cb, void *u);
 
 void RSA_free(RSA *r);
+int RSA_size(const RSA *rsa);
 //////////////////////
 
 /////// Asymmetric cipher //////////
