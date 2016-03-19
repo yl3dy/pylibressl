@@ -1,4 +1,4 @@
-from .. import lib
+from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
 from ..digest.digest import _Hash
@@ -31,8 +31,7 @@ class HMAC(object):
                                                         c_private_key,
                                                         len(private_key)),
                               clib.EVP_PKEY_free)
-        if self._c_pkey == ffi.NULL:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(self._c_pkey, 'null')
 
     def _sign(self, data):
         digest_instance = self._digest_type()
@@ -41,20 +40,15 @@ class HMAC(object):
         c_signature = ffi.new('unsigned char[]', self._digest_type.size())
         c_sign_len = ffi.new('size_t *')
 
-        status = clib.EVP_DigestSignInit(digest_ctx, ffi.NULL,
-                                         digest_instance._HASH_ID, ffi.NULL,
-                                         self._c_pkey)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DigestSignInit(digest_ctx, ffi.NULL,
+                                             digest_instance._HASH_ID,
+                                             ffi.NULL, self._c_pkey))
 
-        status = clib._wrap_EVP_DigestSignUpdate(digest_ctx, c_msg, len(data))
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib._wrap_EVP_DigestSignUpdate(digest_ctx, c_msg,
+                                                     len(data)))
 
-        status = clib.EVP_DigestSignFinal(digest_ctx, c_signature, c_sign_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
-
+        check_status(clib.EVP_DigestSignFinal(digest_ctx, c_signature,
+                                              c_sign_len))
         assert c_sign_len[0] == self._digest_type.size()
 
         return c_signature, c_sign_len
@@ -65,7 +59,7 @@ class HMAC(object):
             raise ValueError('Data should be a byte string')
 
         c_signature, c_sign_len = self._sign(data)
-        return lib.retrieve_bytes(c_signature, c_sign_len[0])
+        return retrieve_bytes(c_signature, c_sign_len[0])
 
     def verify(self, data, auth_code):
         """Verify message authencity using HMAC signature."""

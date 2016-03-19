@@ -9,6 +9,7 @@ MODE_CTR = 1
 MODE_GCM = 2
 MODE_CBC = 3
 MODES = {'CTR': MODE_CTR, 'GCM': MODE_GCM, 'CBC': MODE_CBC}
+BLOCK_MODES = (MODE_CBC,)
 
 
 class BaseCipher(object):

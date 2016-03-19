@@ -1,4 +1,4 @@
-from .. import lib
+from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
 from ..cipher import AES256_CTR
@@ -48,24 +48,22 @@ class RSACrypt(object):
         c_session_keys = ffi.new('unsigned char*[]', (c_session_key,))
         keynum = 1
 
-        status = clib.EVP_SealInit(c_cipher_ctx, c_cipher_id, c_session_keys,
-                                   c_session_key_len, c_iv, c_pkeys, keynum)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_SealInit(c_cipher_ctx, c_cipher_id,
+                                       c_session_keys, c_session_key_len, c_iv,
+                                       c_pkeys, keynum))
 
-        status = clib._wrap_EVP_SealUpdate(c_cipher_ctx, c_enc_msg, c_enc_msg_len,
-                                     c_msg, c_msg_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib._wrap_EVP_SealUpdate(c_cipher_ctx, c_enc_msg,
+                                               c_enc_msg_len, c_msg,
+                                               c_msg_len))
         enc_msg_len = c_enc_msg_len[0]
 
-        status = clib.EVP_SealFinal(c_cipher_ctx, c_enc_msg, c_enc_msg_len)
+        check_status(clib.EVP_SealFinal(c_cipher_ctx, c_enc_msg,
+                                        c_enc_msg_len))
         enc_msg_len += c_enc_msg_len[0]
 
-        encoded_msg = lib.retrieve_bytes(c_enc_msg, enc_msg_len)
-        iv = lib.retrieve_bytes(c_iv, self._cipher_type.iv_length())
-        session_key = lib.retrieve_bytes(c_session_keys[0],
-                                         c_session_key_len[0])
+        encoded_msg = retrieve_bytes(c_enc_msg, enc_msg_len)
+        iv = retrieve_bytes(c_iv, self._cipher_type.iv_length())
+        session_key = retrieve_bytes(c_session_keys[0], c_session_key_len[0])
 
         return encoded_msg, session_key, iv
 
@@ -88,23 +86,18 @@ class RSACrypt(object):
         ctx_tracker = self._cipher_type.ctx()    # track cipher ctx only
         c_cipher_ctx = ctx_tracker.c_cipher_ctx
 
-        status = clib.EVP_OpenInit(c_cipher_ctx, c_cipher_id, c_session_key,
-                                   c_session_key_len, c_iv, c_pkey)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_OpenInit(c_cipher_ctx, c_cipher_id,
+                                       c_session_key, c_session_key_len, c_iv,
+                                       c_pkey))
 
-        status = clib._wrap_EVP_OpenUpdate(c_cipher_ctx, c_msg, c_msg_len, c_enc_msg,
-                                     c_enc_msg_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib._wrap_EVP_OpenUpdate(c_cipher_ctx, c_msg, c_msg_len,
+                                               c_enc_msg, c_enc_msg_len))
         msg_len = c_msg_len[0]
 
-        status = clib.EVP_OpenFinal(c_cipher_ctx, c_msg, c_msg_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_OpenFinal(c_cipher_ctx, c_msg, c_msg_len))
         msg_len += c_msg_len[0]
 
-        message = lib.retrieve_bytes(c_msg, msg_len)
+        message = retrieve_bytes(c_msg, msg_len)
         return message
 
 RSACrypt_AES256 = RSACrypt.new(AES256_CTR)

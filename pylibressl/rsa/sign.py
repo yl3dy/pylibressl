@@ -1,4 +1,4 @@
-from .. import lib
+from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
 from .keypair import RSAKeypair
@@ -42,21 +42,16 @@ class RSASign(object):
         c_signature_len = ffi.new('size_t*')
         c_signature_len[0] = self._keypair.key_size()
 
-        status = clib.EVP_DigestSignInit(c_digest_ctx, ffi.NULL,
-                                         c_hash_id, ffi.NULL, c_pkey)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DigestSignInit(c_digest_ctx, ffi.NULL, c_hash_id,
+                                             ffi.NULL, c_pkey))
 
-        status = clib._wrap_EVP_DigestSignUpdate(c_digest_ctx, c_msg, c_msg_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib._wrap_EVP_DigestSignUpdate(c_digest_ctx, c_msg,
+                                                     c_msg_len))
 
-        status = clib.EVP_DigestSignFinal(c_digest_ctx, c_signature,
-                                          c_signature_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DigestSignFinal(c_digest_ctx, c_signature,
+                                              c_signature_len))
 
-        signature = lib.retrieve_bytes(c_signature, c_signature_len[0])
+        signature = retrieve_bytes(c_signature, c_signature_len[0])
         return signature
 
     def verify(self, message, signature):
@@ -79,22 +74,16 @@ class RSASign(object):
         c_signature = ffi.new('unsigned char[]', signature)
         c_signature_len = len(signature)
 
-        status = clib.EVP_DigestVerifyInit(c_digest_ctx, ffi.NULL, c_hash_id,
-                                           ffi.NULL, c_pkey)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DigestVerifyInit(c_digest_ctx, ffi.NULL,
+                                               c_hash_id, ffi.NULL, c_pkey))
 
-        status = clib._wrap_EVP_DigestVerifyUpdate(c_digest_ctx, c_msg, c_msg_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib._wrap_EVP_DigestVerifyUpdate(c_digest_ctx, c_msg,
+                                                       c_msg_len))
 
-        status = clib.EVP_DigestVerifyFinal(c_digest_ctx, c_signature,
-                                            c_signature_len)
-        if status == 1:
-            return True
-        elif status == 0:
-            return False
-        else:
-            raise LibreSSLError(lib.get_libressl_error())
+        return check_status(clib.EVP_DigestVerifyFinal(c_digest_ctx,
+                                                       c_signature,
+                                                       c_signature_len),
+                            action='verify')
+
 
 RSASign_SHA512 = RSASign.new(SHA512)

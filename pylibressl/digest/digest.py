@@ -1,4 +1,4 @@
-from .. import lib
+from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
 
@@ -20,13 +20,10 @@ class _Hash(object):
         """Create new hash instance."""
         self._c_digest_ctx = ffi.gc(clib.EVP_MD_CTX_create(),
                                     clib.EVP_MD_CTX_destroy)
-        if self._c_digest_ctx == ffi.NULL:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(self._c_digest_ctx, 'null')
 
-        status = clib.EVP_DigestInit_ex(self._c_digest_ctx, self._HASH_ID,
-                                        ffi.NULL)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DigestInit_ex(self._c_digest_ctx, self._HASH_ID,
+                                            ffi.NULL))
 
         if data:
             self.update(data)
@@ -37,23 +34,19 @@ class _Hash(object):
             raise ValueError('Data should be a binary string')
 
         c_data = ffi.new('unsigned char[]', data)
-        status = clib.EVP_DigestUpdate(self._c_digest_ctx, c_data,
-                                       len(data))
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DigestUpdate(self._c_digest_ctx, c_data,
+                                           len(data)))
 
     def digest(self):
         """Show digest as a byte string."""
         c_digest = ffi.new('unsigned char[]', self.size())
         c_digest_len = ffi.new('unsigned int*')
 
-        status = clib.EVP_DigestFinal_ex(self._c_digest_ctx, c_digest,
-                                         c_digest_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DigestFinal_ex(self._c_digest_ctx, c_digest,
+                                             c_digest_len))
         assert c_digest_len[0] == self.size()
 
-        digest_value = lib.retrieve_bytes(c_digest, c_digest_len[0])
+        digest_value = retrieve_bytes(c_digest, c_digest_len[0])
         return digest_value
 
     @classmethod

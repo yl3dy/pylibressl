@@ -1,8 +1,8 @@
-from .. import lib
+from ..lib import retrieve_bytes, check_status, get_libressl_error
 from ..exceptions import *
 from .. import _libressl
 from .cipher import BaseCipher
-from .cipher import MODE_CBC, MODE_CTR
+from .cipher import MODE_CBC, MODE_CTR, BLOCK_MODES
 
 ffi, clib = _libressl.ffi, _libressl.lib
 
@@ -14,13 +14,10 @@ class BaseCipherNoauth(BaseCipher):
 
         c_cipher_ctx = ffi.gc(clib.EVP_CIPHER_CTX_new(),
                               clib.EVP_CIPHER_CTX_free)
-        if c_cipher_ctx == ffi.NULL:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(c_cipher_ctx, 'null')
 
-        status = init_func(c_cipher_ctx, self._CIPHER_ID, ffi.NULL,
-                           self._c_key, self._c_iv)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(init_func(c_cipher_ctx, self._CIPHER_ID, ffi.NULL,
+                               self._c_key, self._c_iv))
 
         return c_cipher_ctx
 
@@ -41,20 +38,16 @@ class BaseCipherNoauth(BaseCipher):
 
         c_cipher_ctx = self._init_cipher_ctx(is_encrypt=True)
 
-        status = clib.EVP_EncryptUpdate(c_cipher_ctx, c_enc_data,
-                                        c_tmp_len, c_data, len(data))
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_EncryptUpdate(c_cipher_ctx, c_enc_data,
+                                            c_tmp_len, c_data, len(data)))
         enc_data_len = c_tmp_len[0]
 
-        status = clib.EVP_EncryptFinal_ex(c_cipher_ctx,
-                                          c_enc_data[c_tmp_len[0]:c_enc_data_alloc],
-                                          c_tmp_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_EncryptFinal_ex(c_cipher_ctx,
+                                              c_enc_data[c_tmp_len[0]:c_enc_data_alloc],
+                                              c_tmp_len))
         enc_data_len += c_tmp_len[0]
 
-        encrypted_data = lib.retrieve_bytes(c_enc_data, enc_data_len)
+        encrypted_data = retrieve_bytes(c_enc_data, enc_data_len)
         return encrypted_data
 
     def decrypt(self, data):
@@ -74,20 +67,23 @@ class BaseCipherNoauth(BaseCipher):
 
         c_cipher_ctx = self._init_cipher_ctx(is_encrypt=False)
 
-        status = clib.EVP_DecryptUpdate(c_cipher_ctx, c_dec_data,
-                                        c_tmp_len, c_data, len(data))
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DecryptUpdate(c_cipher_ctx, c_dec_data,
+                                            c_tmp_len, c_data, len(data)))
         dec_data_len = c_tmp_len[0]
 
-        status = clib.EVP_DecryptFinal_ex(c_cipher_ctx,
-                                          c_dec_data[c_tmp_len[0]:c_dec_data_alloc],
-                                          c_tmp_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        try:
+            check_status(clib.EVP_DecryptFinal_ex(c_cipher_ctx,
+                                                  c_dec_data[c_tmp_len[0]:c_dec_data_alloc],
+                                                  c_tmp_len))
+        except LibreSSLError as e:
+            if self._MODE in BLOCK_MODES:
+                if e.error_code == 101077092:
+                    raise PaddingError
+            else:
+                raise e
         dec_data_len += c_tmp_len[0]
 
-        decrypted_data = lib.retrieve_bytes(c_dec_data, dec_data_len)
+        decrypted_data = retrieve_bytes(c_dec_data, dec_data_len)
         return decrypted_data
 
 

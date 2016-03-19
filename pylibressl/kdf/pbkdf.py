@@ -35,12 +35,10 @@ class PBKDF_HMAC(object):
         c_passw = ffi.new('const char[]', password)
         c_out_key = ffi.new('unsigned char[]', self._keylen)
 
-        status = clib.PKCS5_PBKDF2_HMAC(c_passw, len(password), self._c_salt,
-                                        self._c_salt_len, self._iter_num,
-                                        self._hash_id, self._keylen, c_out_key)
-
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        lib.check_status(clib.PKCS5_PBKDF2_HMAC(c_passw, len(password),
+                                                self._c_salt, self._c_salt_len,
+                                                self._iter_num, self._hash_id,
+                                                self._keylen, c_out_key))
 
         derived_key = lib.retrieve_bytes(c_out_key, self._keylen)
         return derived_key

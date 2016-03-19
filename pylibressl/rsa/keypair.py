@@ -1,4 +1,4 @@
-from .. import lib
+from ..lib import check_status
 from ..exceptions import *
 from .. import _libressl
 
@@ -30,29 +30,26 @@ class RSAKeypair(object):
         c_key_buf = ffi.gc(clib.BIO_new_mem_buf(ffi.cast('void*', c_key),
                                                 len(key)),
                             clib.BIO_free_all)
-        if c_key_buf == ffi.NULL:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(c_key_buf, 'null')
 
         c_rsa = ffi.gc(rsa_read_func(c_key_buf, ffi.NULL, ffi.NULL, ffi.NULL),
                        clib.RSA_free)
-        if c_rsa == ffi.NULL:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(c_rsa, 'null')
 
         modulus_size = clib.RSA_size(c_rsa)
         if modulus_size <= 0:
             raise LibreSSLError(lib.get_libressl_error())
         if hasattr(self, '_modulus_size'):
             if self._modulus_size != modulus_size:
-                raise LibreSSLError
+                raise RSAKeyError
         else:
             self._modulus_size = modulus_size
 
-        status = clib.EVP_PKEY_set1_RSA(self._c_pkey, c_rsa)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_PKEY_set1_RSA(self._c_pkey, c_rsa))
 
     def _set_pkey(self, public_key, private_key):
         self._c_pkey = ffi.gc(clib.EVP_PKEY_new(), clib.EVP_PKEY_free)
+        check_status(self._c_pkey, 'null')
 
         if public_key:
             self._set_one_key(public_key, is_public=True)

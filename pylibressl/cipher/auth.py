@@ -1,4 +1,4 @@
-from .. import lib
+from ..lib import check_status, retrieve_bytes
 from ..exceptions import *
 from .. import _libressl
 from .cipher import BaseCipher, MODE_GCM
@@ -84,25 +84,18 @@ class BaseCipherGCM(BaseCipherAuth):
 
         c_cipher_ctx = ffi.gc(clib.EVP_CIPHER_CTX_new(),
                               clib.EVP_CIPHER_CTX_free)
-        if c_cipher_ctx == ffi.NULL:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(c_cipher_ctx, 'null')
 
-        status = init_func(c_cipher_ctx, self._CIPHER_ID, ffi.NULL,
-                           ffi.NULL, ffi.NULL)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(init_func(c_cipher_ctx, self._CIPHER_ID, ffi.NULL,
+                               ffi.NULL, ffi.NULL))
 
         # Set IV length to 16
-        status = clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
-                                          clib.EVP_CTRL_GCM_SET_IVLEN,
-                                          self._AEAD_TAG_SIZE, ffi.NULL)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
+                                              clib.EVP_CTRL_GCM_SET_IVLEN,
+                                              self._AEAD_TAG_SIZE, ffi.NULL))
 
-        status = init_func(c_cipher_ctx, ffi.NULL, ffi.NULL, self._c_key,
-                           self._c_iv)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(init_func(c_cipher_ctx, ffi.NULL, ffi.NULL, self._c_key,
+                               self._c_iv))
 
         return c_cipher_ctx
 
@@ -131,33 +124,25 @@ class BaseCipherGCM(BaseCipherAuth):
 
         # Write AAD
         if aad:
-            status = clib.EVP_EncryptUpdate(c_cipher_ctx, ffi.NULL, c_tmp_len,
-                                            c_aad, len(aad))
-            if status != 1:
-                raise LibreSSLError(lib.get_libressl_error())
+            check_status(clib.EVP_EncryptUpdate(c_cipher_ctx, ffi.NULL,
+                                                c_tmp_len, c_aad, len(aad)))
 
         # Write data to encrypt
-        status = clib.EVP_EncryptUpdate(c_cipher_ctx, c_enc_data, c_tmp_len,
-                                        c_data, len(data))
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_EncryptUpdate(c_cipher_ctx, c_enc_data,
+                                            c_tmp_len, c_data, len(data)))
         enc_data_len = c_tmp_len[0]
 
-        status = clib.EVP_EncryptFinal_ex(c_cipher_ctx,
+        check_status(clib.EVP_EncryptFinal_ex(c_cipher_ctx,
                                           c_enc_data[c_tmp_len[0]:c_enc_data_alloc],
-                                          c_tmp_len)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+                                          c_tmp_len))
         enc_data_len += c_tmp_len[0]
 
-        status = clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
-                                          clib.EVP_CTRL_GCM_GET_TAG,
-                                          self._AEAD_TAG_SIZE, c_tag)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
+                                              clib.EVP_CTRL_GCM_GET_TAG,
+                                              self._AEAD_TAG_SIZE, c_tag))
 
-        encrypted_data = lib.retrieve_bytes(c_enc_data, enc_data_len)
-        tag = lib.retrieve_bytes(c_tag, self._AEAD_TAG_SIZE)
+        encrypted_data = retrieve_bytes(c_enc_data, enc_data_len)
+        tag = retrieve_bytes(c_tag, self._AEAD_TAG_SIZE)
         return encrypted_data, tag
 
     def decrypt(self, data, tag, aad=None):
@@ -191,32 +176,24 @@ class BaseCipherGCM(BaseCipherAuth):
 
         # Write AAD
         if aad:
-            status = clib.EVP_DecryptUpdate(c_cipher_ctx, ffi.NULL, c_tmp_len,
-                                            c_aad, len(aad))
-            if status != 1:
-                raise LibreSSLError(lib.get_libressl_error())
+            check_status(clib.EVP_DecryptUpdate(c_cipher_ctx, ffi.NULL,
+                                                c_tmp_len, c_aad, len(aad)))
 
         # Write data to decrypt
-        status = clib.EVP_DecryptUpdate(c_cipher_ctx, c_dec_data, c_tmp_len,
-                                        c_data, len(data))
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_DecryptUpdate(c_cipher_ctx, c_dec_data,
+                                            c_tmp_len, c_data, len(data)))
         dec_data_len = c_tmp_len[0]
 
-        status = clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
-                                          clib.EVP_CTRL_GCM_SET_TAG,
-                                          self._AEAD_TAG_SIZE, c_tag)
-        if status != 1:
-            raise LibreSSLError(lib.get_libressl_error())
+        check_status(clib.EVP_CIPHER_CTX_ctrl(c_cipher_ctx,
+                                              clib.EVP_CTRL_GCM_SET_TAG,
+                                              self._AEAD_TAG_SIZE, c_tag))
 
-        status = clib.EVP_DecryptFinal_ex(c_cipher_ctx,
-                                          c_dec_data[c_tmp_len[0]:c_dec_data_alloc],
-                                          c_tmp_len)
-        if status <= 0:
-            raise AuthencityError
+        check_status(clib.EVP_DecryptFinal_ex(c_cipher_ctx,
+                                              c_dec_data[c_tmp_len[0]:c_dec_data_alloc],
+                                              c_tmp_len), action='auth')
         dec_data_len += c_tmp_len[0]
 
-        decrypted_data = lib.retrieve_bytes(c_dec_data, dec_data_len)
+        decrypted_data = retrieve_bytes(c_dec_data, dec_data_len)
         return decrypted_data
 
 

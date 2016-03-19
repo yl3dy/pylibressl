@@ -1,7 +1,7 @@
 import pytest
 from pylibressl.cipher import GOST89_CTR, AES256_CTR, AES256_CBC, AES256_GCM
-from pylibressl.cipher import MODE_CTR, MODE_CBC, MODE_GCM
-from pylibressl.exceptions import AuthencityError, LibreSSLError
+from pylibressl.cipher import MODE_CTR, MODE_CBC, MODE_GCM, BLOCK_MODES
+from pylibressl.exceptions import AuthencityError, LibreSSLError, PaddingError
 from pylibressl.cipher import CipherHMAC, GOST89_HMAC_Streebog512
 from pylibressl.cipher import OnionCipher, Onion_AES256_GOST89
 
@@ -55,8 +55,7 @@ class GenericOrdinaryCipherTest:
         assert self.good_string != decoded
 
     def test_decrypt_with_different_keys(self):
-        # The following test should produce LibreSSL error for CBC mode (maybe
-        # other block modes):
+        # The following test should produce LibreSSL error for block modes:
         # digital envelope routines:EVP_DecryptFinal_ex:bad decrypt:evp/evp_enc.c:529:
         self.setup_key_iv()
 
@@ -64,8 +63,8 @@ class GenericOrdinaryCipherTest:
         cipher_2 = self.CIPHER_CLASS(self.good_key_2, self.good_iv)
         encoded = cipher_1.encrypt(self.good_string)
 
-        if self.CIPHER_CLASS.mode() == MODE_CBC:
-            with pytest.raises(LibreSSLError):
+        if self.CIPHER_CLASS.mode() in BLOCK_MODES:
+            with pytest.raises(PaddingError):
                 decoded = cipher_2.decrypt(encoded)
         else:
             decoded = cipher_2.decrypt(encoded)
