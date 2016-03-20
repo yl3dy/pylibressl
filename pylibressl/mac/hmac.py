@@ -1,7 +1,7 @@
 from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
-from ..digest import BaseHash
+from ..digest import BaseHash, Streebog512
 
 ffi, clib = _libressl.ffi, _libressl.lib
 
@@ -86,3 +86,6 @@ class HMAC(object):
     def sign_size(self):
         """Return size of an authentication code."""
         return self._digest_type.size()
+
+HMAC_Streebog512 = HMAC.new(Streebog512)
+HMAC_Streebog512.__doc__ = 'HMAC_Streebog512'

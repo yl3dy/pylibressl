@@ -1,6 +1,6 @@
 import pytest
 from pylibressl.mac import HMAC
-from pylibressl.digest import Streebog512
+from pylibressl.digest import Streebog512, SHA512
 from pylibressl.exceptions import LibreSSLError
 
 class GenericHMACTest:
@@ -62,3 +62,6 @@ class GenericHMACTest:
 
 class TestHMACStreebog512(GenericHMACTest):
     HASH_CLASS = Streebog512
+
+class TestHMACSHA512(GenericHMACTest):
+    HASH_CLASS = SHA512
