@@ -1,5 +1,5 @@
 """
-PyLibreSSL -- LibreSSL bindings for Python.
+LibreSSL bindings for Python.
 
 Contains many cryptographic primitives, specifically:
 
