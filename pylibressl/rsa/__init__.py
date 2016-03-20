@@ -6,11 +6,11 @@ wrapper class to store RSA keypair.
 
 Example:
 
->>> from pylibressl.rsa import RSAKeypair, RSASign
+>>> from pylibressl.rsa import RSAKeypair, RSASign_SHA512
 >>>
 >>> privkey = open('private_key.pem', 'rb').read()
 >>> keypair = RSAKeypair(private_key=privkey)
->>> signer = RSASign(keypair)
+>>> signer = RSASign_SHA512(keypair)
 >>>
 >>> message = b'Example message. 1234567890'
 >>> signature = signer.sign(message)

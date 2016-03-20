@@ -5,7 +5,7 @@ Usage example:
 
 >>> from pylibressl.digest import SHA512
 >>> data = b'Some binary data'
->>> data_digest = SHA512.new(data).digest()
+>>> data_digest = SHA512(data).digest()
 
 """
 

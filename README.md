@@ -1,5 +1,5 @@
-LibreSSL cffi bindings for Korobok
-==================================
+LibreSSL bindings for Python using CFFI
+=======================================
 
 Requirements
 ------------

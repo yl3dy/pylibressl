@@ -1,10 +1,10 @@
 """
-Cryptomodule for Ghostbox.
+PyLibreSSL -- LibreSSL bindings for Python.
 
-Contains many cryptographic primitives for usage in Ghostbox. Specifically:
+Contains many cryptographic primitives, specifically:
 
     * `digest` -- various hash functions
-    * `cipher` -- symmetric ciphers
+    * `cipher` -- symmetric ciphers, incl. authenticated
     * `mac` -- Message Authentication Codes
     * `rsa` -- RSA operations (sign/verify)
     * `kdf` -- key derivation algorithms

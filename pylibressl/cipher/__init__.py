@@ -6,7 +6,7 @@ Usage example:
 >>> from pylibressl.cipher import GOST89_CTR
 >>> key, iv = b'1'*GOST89_CTR.key_length(), b'2'*GOST89_CTR.block_size()
 >>> data = b'Some data to be encoded'
->>> encoded_data = GOST89_CTR.new(key, iv).encrypt(data)
+>>> encoded_data = GOST89_CTR(key, iv).encrypt(data)
 
 """
 
