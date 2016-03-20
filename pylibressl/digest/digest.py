@@ -4,7 +4,7 @@ from .. import _libressl
 
 ffi, clib = _libressl.ffi, _libressl.lib
 
-class _Hash(object):
+class BaseHash(object):
     """Generic hash object.
 
     When implementing a digest, `C_HASH_NAME` should be specified as a string
@@ -65,13 +65,13 @@ class _Hash(object):
         return clib.EVP_MAX_MD_SIZE
 
 
-class Streebog512(_Hash):
+class Streebog512(BaseHash):
     """Streebog (GOST R 34.11.2012) hash."""
     _HASH_ID = clib.EVP_streebog512()
 
-class SHA512(_Hash):
+class SHA512(BaseHash):
     """SHA512 hash."""
     _HASH_ID = clib.EVP_sha512()
 
-class SHA256(_Hash):
+class SHA256(BaseHash):
     _HASH_ID = clib.EVP_sha256()

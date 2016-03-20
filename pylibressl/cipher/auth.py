@@ -3,7 +3,7 @@ from ..exceptions import *
 from .. import _libressl
 from .cipher import BaseCipher, MODE_GCM
 from .noauth import GOST89_CTR, AES256_CTR, BaseCipherNoauth
-from ..digest.digest import _Hash, Streebog512, SHA512
+from ..digest import BaseHash, Streebog512, SHA512
 from ..mac import HMAC
 
 ffi, clib = _libressl.ffi, _libressl.lib
@@ -23,7 +23,7 @@ class CipherHMAC(BaseCipherAuth):
         """Create new cipher+HMAC type."""
         if not issubclass(cipher_type, BaseCipherNoauth):
             raise ValueError('Cipher should be a BaseCipherNoauth subclass')
-        if not issubclass(hash_type, _Hash):
+        if not issubclass(hash_type, BaseHash):
             raise ValueError('Wrong hash type')
 
         class new_cipher_hmac(cls):

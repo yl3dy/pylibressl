@@ -2,8 +2,7 @@ from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
 from .keypair import RSAKeypair
-from ..digest.digest import _Hash
-from ..digest import SHA512
+from ..digest import SHA512, BaseHash
 
 ffi, clib = _libressl.ffi, _libressl.lib
 
@@ -13,8 +12,8 @@ class RSASign(object):
     @classmethod
     def new(cls, digest_type):
         """Create new RSA signing class."""
-        if not issubclass(digest_type, _Hash):
-            raise ValueError('Digest type must be a _Hash subclass')
+        if not issubclass(digest_type, BaseHash):
+            raise ValueError('Digest type must be a BaseHash subclass')
 
         class new_rsa_sign(cls):
             _digest_type = digest_type

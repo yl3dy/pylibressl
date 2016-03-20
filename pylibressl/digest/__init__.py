@@ -9,6 +9,6 @@ Usage example:
 
 """
 
-from .digest import Streebog512, SHA512, SHA256
+from .digest import Streebog512, SHA512, SHA256, BaseHash
 
-__all__ = ['Streebog512', 'SHA512', 'SHA256']
+__all__ = ['Streebog512', 'SHA512', 'SHA256', 'BaseHash']

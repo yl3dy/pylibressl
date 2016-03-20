@@ -1,7 +1,7 @@
 from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
-from ..digest.digest import _Hash
+from ..digest import BaseHash
 
 ffi, clib = _libressl.ffi, _libressl.lib
 
@@ -11,8 +11,8 @@ class HMAC(object):
     @classmethod
     def new(cls, hash_type):
         """Create new HMAC class with specified digest."""
-        if not issubclass(hash_type, _Hash):
-            raise ValueError('Hash type should be a _Hash subclass')
+        if not issubclass(hash_type, BaseHash):
+            raise ValueError('Hash type should be a BaseHash subclass')
 
         class new_hmac(cls):
             _digest_type = hash_type

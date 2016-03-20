@@ -1,8 +1,7 @@
 from .. import lib
 from ..exceptions import *
 from .. import _libressl
-from ..digest.digest import _Hash
-from ..digest import Streebog512, SHA256
+from ..digest import Streebog512, SHA256, BaseHash
 
 ffi, clib = _libressl.ffi, _libressl.lib
 
@@ -10,8 +9,8 @@ class PBKDF_HMAC(object):
     @classmethod
     def new(cls, hash_type):
         """Create new PBKDF object."""
-        if not issubclass(hash_type, _Hash):
-            raise ValueError('Hash type should be _Hash instance')
+        if not issubclass(hash_type, BaseHash):
+            raise ValueError('Hash type should be BaseHash instance')
 
         class new_pbkdf_hmac(cls):
             _hash_id = hash_type._HASH_ID
