@@ -1,11 +1,18 @@
 """
-Digests
+Message digests
 
 Usage example:
 
 >>> from pylibressl.digest import SHA512
+>>>
 >>> data = b'Some binary data'
->>> data_digest = SHA512(data).digest()
+>>> hash = SHA512()
+>>> hash_value = hash.update(data).digest()
+>>>
+>>> # Other possible form:
+>>> # hash_value = SHA512(data).digest()
+
+Note that you cannot call ``digest()`` more than once.
 
 """
 

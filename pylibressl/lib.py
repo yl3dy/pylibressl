@@ -1,7 +1,7 @@
 """
 Various auxiliary routines
 
-NB: intended only for internal use!
+**Intended only for internal use!**
 
 """
 

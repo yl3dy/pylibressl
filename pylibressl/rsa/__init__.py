@@ -2,9 +2,10 @@
 RSA signing and encryption.
 
 Contains routines to sign/verify, encrypt/decrypt messages using RSA and a
-wrapper class to store RSA keypair.
+wrapper class to store RSA keypair. Note that only keys in PEM format are
+supported.
 
-Example:
+Signing example:
 
 >>> from pylibressl.rsa import RSAKeypair, RSASign_SHA512
 >>>
@@ -19,6 +20,19 @@ Example:
 ...     print('Signature is ok')
 >>> else:
 ...     print('Signature is NOT ok!!!')
+
+Cipher example:
+
+>>> from pylibressl.rsa import RSAKeypair, RSACrypt_AES256
+>>>
+>>> privkey = open('private_key.pem', 'rb').read()
+>>> keypair = RSAKeypair(private_key=privkey)
+>>> rsacrypt = RSACrypt_AES256(keypair)
+>>>
+>>> message = b'Example message. 1234567890'
+>>> enc_message, session_key, iv = rsacrypt.encrypt(message)
+>>> decoded_message = rsacrypt.decrypt(enc_message, session_key, iv)
+>>> assert decoded_message == message
 
 """
 

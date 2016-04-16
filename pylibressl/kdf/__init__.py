@@ -1,11 +1,16 @@
 """
-Key derivation algorithms.
+Key derivation functions.
 
 Usage example:
 
 >>> from pylibressl.kdf import PBKDF_HMAC_SHA256
+>>>
 >>> password = b'qwerty123'
->>> key = PBKDF_HMAC_SHA256(b'Salt', 8192, 64).derivate(password)
+>>> salt = b'salty salt'
+>>> iteration_number = 16384
+>>> key_length = 64
+>>>
+>>> deriv_key = PBKDF_HMAC_SHA256(salt, iteration_number, key_length).derivate(password)
 
 """
 

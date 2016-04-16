@@ -5,3 +5,11 @@ _*
 *.o
 .cache
 *.egg
+
+# Sphinx docs
+docs/*
+!docs/conf.py
+!docs/*.rst
+!docs/Makefile
+docs/pylibressl*.rst
+docs/modules.rst

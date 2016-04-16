@@ -1,5 +1,5 @@
 """
-Crypto signing: HMAC etc.
+Message Authentication Codes.
 
 Signing example:
 
@@ -14,6 +14,7 @@ Verifying example:
 >>> data = b'Some data to verify'
 >>> private_key = b'Some private key 12345678990asdfghjkl'
 >>> signature = b'signature'
+>>>
 >>> if HMAC_Streebog512(private_key).verify(data, signature):
 >>>     print('Signature is ok')
 >>> else:
