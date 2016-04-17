@@ -8,6 +8,7 @@ Contains many cryptographic primitives, specifically:
     * `mac` -- Message Authentication Codes
     * `rsa` -- RSA operations (sign/verify)
     * `kdf` -- key derivation algorithms
+    * `utils` -- miscellaneous crypto utilities
 
 For more details, see appropriate subpackages.
 
