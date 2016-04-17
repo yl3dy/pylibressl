@@ -12,7 +12,8 @@ Usage example:
 >>> # Other possible form:
 >>> # hash_value = SHA512(data).digest()
 
-Note that you cannot call ``digest()`` more than once.
+Note that you cannot call ``update()`` after ``digest()`` for the same hash
+instance.
 
 """
 

@@ -16,6 +16,7 @@ class BaseHash(object):
     # to an appropriate one.
     _HASH_ID = None
 
+
     def __init__(self, data=None):
         """Create new hash instance."""
         self._c_digest_ctx = ffi.gc(clib.EVP_MD_CTX_create(),
@@ -24,12 +25,21 @@ class BaseHash(object):
 
         check_status(clib.EVP_DigestInit_ex(self._c_digest_ctx, self._HASH_ID,
                                             ffi.NULL))
+        self._digest_finalized = False
 
         if data:
             self.update(data)
 
     def update(self, data):
-        """Append more data to digest."""
+        """Append more data to digest.
+
+        Should not be called after ``digest()`` call. Otherwise,
+        ``DigestReuseError`` is raised.
+
+        """
+        if self._digest_finalized:
+            raise DigestReuseError
+
         if type(data) != type(b''):
             raise ValueError('Data should be a binary string')
 
@@ -39,6 +49,8 @@ class BaseHash(object):
 
     def digest(self):
         """Show digest as a byte string."""
+        self._digest_finalized = True
+
         c_digest = ffi.new('unsigned char[]', self.size())
         c_digest_len = ffi.new('unsigned int*')
 
