@@ -13,4 +13,4 @@ devbuild:
 clean:
 	rm pylibressl/__pycache__/* || true
 	rm pylibressl/*/__pycache__/* || true
-	rm pylibressl/_cryptomodule* || true
+	rm pylibressl/_libressl* || true

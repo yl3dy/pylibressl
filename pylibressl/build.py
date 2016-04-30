@@ -5,15 +5,20 @@ To manually compile C module, run `python3 pylibressl/build.py`.
 
 """
 import os
+import sys
 import cffi
 
 TOPLEVEL_PACKAGE_PATH = os.path.abspath(os.path.dirname(__file__))
 SOURCES = []
 LIBRARIES = ['crypto']
-LIBRARY_DIRS = ['/usr/local/ssl/lib']
-INCLUDE_DIRS = ['/usr/local/ssl/include', TOPLEVEL_PACKAGE_PATH]
+LIBRARY_DIRS = [os.path.join(TOPLEVEL_PACKAGE_PATH, 'libressl/lib')]
+INCLUDE_DIRS = [os.path.join(TOPLEVEL_PACKAGE_PATH, 'libressl/include')]
 EXTRA_COMPILE_ARGS = []
 EXTRA_LINK_ARGS = []
+
+if sys.platform.startswith('win'):
+    LIBRARIES.extend(['advapi32', 'ws2_32'])
+    EXTRA_LINK_ARGS.extend(['/MD'])
 
 cdef = '''
 void OPENSSL_add_all_algorithms_noconf(void);
