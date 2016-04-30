@@ -1,4 +1,5 @@
 import pylibressl.digest as dgst
+from pylibressl.exceptions import DigestReuseError
 import pytest
 
 class GenericHashTest:
@@ -48,6 +49,12 @@ class GenericHashTest:
         hash_seq = hash_inst.digest()
 
         assert hash_long == hash_seq
+
+    def test_no_update_after_digest(self):
+        hash = self.HASH_CLASS(self.GOOD_STRING)
+        d = hash.digest()
+        with pytest.raises(DigestReuseError):
+            hash.update(b'asdfasdf')
 
 class TestSHA256(GenericHashTest):
     HASH_CLASS = dgst.SHA256

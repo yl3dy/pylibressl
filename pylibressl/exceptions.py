@@ -3,6 +3,9 @@ Cryptomodule exceptions
 
 """
 
+class DigestReuseError(Exception):
+    """Raised when BaseHash.update() is called after BaseHash.digest()."""
+
 class PaddingError(Exception):
     """Raised when decrypting message with incorrect padding using block
     cipher."""
