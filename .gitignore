@@ -4,7 +4,13 @@ _*
 *.vim
 *.o
 .cache
+
+# Setuptools
 *.egg
+.eggs/
+build/
+dist/
+*.egg-info/
 
 # LibreSSL binaries
 pylibressl/libressl/

@@ -29,7 +29,7 @@ Unpack LibreSSL sources and execute the following in the source root:
 It will generate Visual Studio solution and other build files. Then you can
 build it in MSBuild console using `msbuild.exe LibreSSL.sln`.
 
-Create directories `$package_path/libressl/{include,lib}`. Copy `build-vs/crypto/Debug/crypto.lib` to `$package_path/libressl/lib/`, `include/openssl` to `$package_path/libressl/include/`.
+Create directories `$package_path\libressl\{include,lib}`. Copy `build-vs\crypto\Debug\crypto.lib` to `$package_path\libressl\lib\`, `include\openssl` to `$package_path\libressl\include\`.
 
 
 ## Building and running
