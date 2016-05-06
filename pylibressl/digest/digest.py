@@ -7,8 +7,8 @@ ffi, clib = _libressl.ffi, _libressl.lib
 class BaseHash(object):
     """Generic hash object.
 
-    When implementing a digest, `C_HASH_NAME` should be specified as a string
-    containing the name of digest as it is understood by LibreSSL.
+    When implementing a digest, `_HASH_ID` should be set to appropriate EVP_MD*
+    using LibreSSL EVP functions.
 
     """
 

@@ -6,6 +6,7 @@
 * cffi > 1.0.0
 * pytest (optional)
 * make (optional)
+* sphinx (optional)
 
 
 ## Building prerequisities
@@ -45,3 +46,14 @@ called. To build extensions in dev mode, call `make devbuild`. Run tests using
 Add `$package_path\libressl\lib` to your PATH. Build and install package using
 `python setup.py install` or `python setup.py develop`. Optionally you can run
 tests using `python setup.py tests` or `python -m pytest` in the project root.
+
+
+## Building documentation
+
+To build documentation, install `sphinx` and run the following in project root:
+
+    sphinx-apidoc -e -M -o docs/ . setup.py
+    cd docs/
+    make html
+
+HTMLs will be in `docs/_build/html` directory.
