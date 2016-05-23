@@ -14,3 +14,4 @@ clean:
 	rm pylibressl/__pycache__/* || true
 	rm pylibressl/*/__pycache__/* || true
 	rm pylibressl/_libressl* || true
+	rm tests/__pycache__/* || true
