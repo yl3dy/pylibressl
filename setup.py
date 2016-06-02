@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pylibressl',
-    version='0.2',
+    version='0.3',
 
     packages=find_packages(),
     package_data={'pylibressl': ['libressl/lib/*.*']},

@@ -4,9 +4,9 @@
 
 * LibreSSL >= 2.3.3
 * cffi > 1.0.0
-* pytest (optional)
-* make (optional)
-* sphinx (optional)
+* pytest (optional, running tests)
+* make (optional, building docs)
+* sphinx (optional, building docs)
 
 
 ## Building prerequisities
@@ -20,6 +20,8 @@ execute `./configure --prefix=PREFIX`,  `make` and `make install`.  You may run 
 `pylibressl` directory inside distribution root (package root).
 
 ### Windows (Visual Studio)
+
+First of all, [cmake](https://cmake.org/download/) should be installed. The following steps were tested with cmake 3.5 and Visual Studio 2015, but it should work for sufficiently recent versions too.
 
 Unpack LibreSSL sources and execute the following in the source root:
 
@@ -39,7 +41,8 @@ Create directories `$package_path\libressl\{include,lib}`. Copy `build-vs\crypto
 
 Before testing/building `export LD_LIBRARY_PATH=$package_path/libressl/lib` should be
 called. To build extensions in dev mode, call `make devbuild`. Run tests using
-`make tests` or `make quiet_tests`.
+`make tests` or `make quiet_tests`. To build package so it would be available
+to other tools use `python setup.py install` or `python setup.py develop`.
 
 ### Windows
 
@@ -55,5 +58,11 @@ To build documentation, install `sphinx` and run the following in project root:
     sphinx-apidoc -e -M -o docs/ . setup.py
     cd docs/
     make html
+
+or just
+
+    make docs
+
+at the project root.
 
 HTMLs will be in `docs/_build/html` directory.
