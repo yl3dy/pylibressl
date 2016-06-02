@@ -10,24 +10,25 @@ ffi, clib = _libressl.ffi, _libressl.lib
 class OnionCipher(object):
     """Onion ciphering."""
     @classmethod
-    def new(cls, cipher_list):
+    def new(cls, cipher_list_):
         """Create new onion cipher chain.
 
         Ciphers are set in encryption order.
 
         """
-        if isinstance(cipher_list, str):
+        if isinstance(cipher_list_, str):
             raise ValueError('cipher_list should be a list-like thing')
         try:
-            for cipher in cipher_list:
+            for cipher in cipher_list_:
                 if not issubclass(cipher, BaseCipher):
                     raise ValueError('Cipher list should contain BaseCipher ' +
                                      'subclasses.')
         except TypeError:
             raise ValueError('cipher_list should be a list-like thing')
 
-        cls.cipher_list = cipher_list
-        return cls
+        class new_onion_cipher(cls):
+            cipher_list = cipher_list_
+        return new_onion_cipher
 
     def __init__(self, key_list):
         """Initialize onion ciphering."""

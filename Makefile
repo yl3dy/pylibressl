@@ -1,3 +1,5 @@
+.PHONY: test quiet_test devbuild clean docs
+
 all: devbuild quiet_test
 
 test:
@@ -15,3 +17,8 @@ clean:
 	rm pylibressl/*/__pycache__/* || true
 	rm pylibressl/_libressl* || true
 	rm tests/__pycache__/* || true
+
+# Generate documentation
+docs:
+	sphinx-apidoc -f -e -M -o docs/ . setup.py
+	make -C docs/ html
