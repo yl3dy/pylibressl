@@ -1,9 +1,11 @@
 import pytest
 from pylibressl.cipher import GOST89_CTR, AES256_CTR, AES256_CBC, AES256_GCM
 from pylibressl.cipher import MODE_CTR, MODE_CBC, MODE_GCM, BLOCK_MODES
-from pylibressl.exceptions import AuthencityError, LibreSSLError, PaddingError
 from pylibressl.cipher import CipherHMAC, GOST89_HMAC_Streebog512
+from pylibressl.cipher import AES256_HMAC_SHA512
 from pylibressl.cipher import OnionCipher, Onion_AES256_GOST89
+from pylibressl.digest import SHA256
+from pylibressl.exceptions import AuthencityError, LibreSSLError, PaddingError
 
 class GenericOrdinaryCipherTest:
     """Base class for ordinary cipher tests.
@@ -196,7 +198,8 @@ class TestGOST89_CTR(GenericOrdinaryCipherTest):
     IV_LENGTH = 8
 
 
-class TestCipherHMAC:
+
+class GenericCipherHMACTest:
     good_string = b'QY\xf4\xff\x9e\xee\xe2\xad\xcf\xf8\xf5\xf5\xddm\x18z\xbbp\xb83\x8aZ\x9a\x9a\x81\xfd\x10?\xac\xd3\xf9\xfcE\x81*\xeda\xf9i\xce\xd9\xe6\xecH\xdf\xe3\x1c}\x18\x16\x06bJ\xcb\xd7\x1b\x90\x04j\xe3\xe3\x05d\x86\xfe\x91\x13I\xb7\xf3\x869M\x16.\x03\xcf\xdf\x99\xa0`l\xcf\x06\xc7\xa1\x86xd\x0c\xa0\xd3\xbf\x8ct\t=\x8c\xe0\x05\xe2\xa2\xea18$b\t\xbf\xbe#o\xeb\x8f\xa8?\x89\x8aI\xa6\x00\x97\x0c\x99\xe7\xfe\x0bI'
     cipher_hmac = GOST89_HMAC_Streebog512
 
@@ -218,6 +221,26 @@ class TestCipherHMAC:
         bad_auth_code = b'\xff' + auth_code[1:]
         with pytest.raises(AuthencityError):
             dec = cipher_ae.decrypt(enc, bad_auth_code)
+
+    def test_corrupted_data(self):
+        self.setup_key_iv()
+        cipher_ae = self.cipher_hmac(self.key, self.iv)
+        enc, auth_code = cipher_ae.encrypt(self.good_string)
+        bad_enc = b'\xff' + enc[1:]
+        with pytest.raises(AuthencityError):
+            dec = cipher_ae.decrypt(bad_enc, auth_code)
+
+
+class TestCipherHMAC_GOST89_Streebog512_Preset(GenericCipherHMACTest):
+    cipher_hmac = GOST89_HMAC_Streebog512
+
+class TestCipherHMAC_AES256_SHA512_Preset(GenericCipherHMACTest):
+    cipher_hmac = AES256_HMAC_SHA512
+
+class TestCipherHMAC_AES256CBC_SHA256(GenericCipherHMACTest):
+    cipher_hmac = CipherHMAC.new(AES256_CBC, SHA256)
+
+
 
 class TestOnionCipher:
     good_string = b'QY\xf4\xff\x9e\xee\xe2\xad\xcf\xf8\xf5\xf5\xddm\x18z\xbbp\xb83\x8aZ\x9a\x9a\x81\xfd\x10?\xac\xd3\xf9\xfcE\x81*\xeda\xf9i\xce\xd9\xe6\xecH\xdf\xe3\x1c}\x18\x16\x06bJ\xcb\xd7\x1b\x90\x04j\xe3\xe3\x05d\x86\xfe\x91\x13I\xb7\xf3\x869M\x16.\x03\xcf\xdf\x99\xa0`l\xcf\x06\xc7\xa1\x86xd\x0c\xa0\xd3\xbf\x8ct\t=\x8c\xe0\x05\xe2\xa2\xea18$b\t\xbf\xbe#o\xeb\x8f\xa8?\x89\x8aI\xa6\x00\x97\x0c\x99\xe7\xfe\x0bI'
