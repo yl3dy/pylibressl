@@ -63,6 +63,21 @@ class TestRSASign:
         signature = signer.sign(self.good_message)
         assert signer.verify(self.good_message, signature)
 
+    def test_sign_verify_with_pubkey(self):
+        kp = rsa.RSAKeypair(private_key=self.private_key)
+        signer = rsa.RSASign_SHA512(kp)
+        signature = signer.sign(self.good_message)
+
+        kp2 = rsa.RSAKeypair(public_key=self.public_key)
+        signer2 = rsa.RSASign_SHA512(kp2)
+        assert signer2.verify(self.good_message, signature)
+
+    def test_sign_with_pubkey(self):
+        kp = rsa.RSAKeypair(public_key=self.public_key)
+        signer = rsa.RSASign_SHA512(kp)
+        with pytest.raises(ValueError):
+            signature = signer.sign(self.good_message)
+
     def test_sign_verify_different_keylength(self):
         kp = rsa.RSAKeypair(private_key=self.private_key_2)
         signer = rsa.RSASign_SHA512(kp)

@@ -29,6 +29,9 @@ class RSASign(object):
         """Sign a message with RSA."""
         if type(message) != type(b''):
             raise ValueError('Message should be a byte string')
+        if not self._keypair.has_private_key():
+            raise ValueError("Keypair doesn't contain private key, " + \
+                             "signing is impossible")
 
         digest = self._digest_type()
         c_digest_ctx = digest._c_digest_ctx
@@ -59,9 +62,6 @@ class RSASign(object):
             raise ValueError('Message should be byte string')
         if type(signature) != type(b''):
             raise ValueError('Signature should be byte string')
-        if not self._keypair.has_private_key():
-            raise ValueError("Keypair doesn't contain private key, " + \
-                             "verification impossible")
 
         digest = self._digest_type()
         c_digest_ctx = digest._c_digest_ctx
