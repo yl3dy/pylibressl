@@ -7,8 +7,9 @@ General remarks
 There are base classes with ``Base`` prefix. These are intended to be used to determine
 type of the primitive.
 
-All returned sizes (like by ``BaseCipher.key_length()``) are in bytes.
+All returned sizes (e.g. by ``BaseCipher.key_length()``) are in bytes.
 
+``rand.get_random_bytes`` is **NOT** fork-safe with at least LibreSSL 2.3.x.
 
 Exceptions
 ----------

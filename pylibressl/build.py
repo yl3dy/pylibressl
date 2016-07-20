@@ -155,6 +155,10 @@ int EVP_OpenFinal(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl);
 int _wrap_EVP_OpenUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
     const unsigned char *in, int inl);
 ////////////////////////////////////
+
+/////// Random number generation //////////
+int  RAND_bytes(unsigned char *buf, int num);
+///////////////////////////////////////////
 '''
 src = '''
 #include <openssl/evp.h>
@@ -162,6 +166,7 @@ src = '''
 #include <openssl/crypto.h>
 #include <openssl/bio.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 
 extern int _wrap_EVP_DigestSignUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size);
 int _wrap_EVP_DigestSignUpdate(EVP_MD_CTX *ctx, const void* msg, size_t size)
