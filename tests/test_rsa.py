@@ -142,8 +142,6 @@ class TestRSACrypt:
     good_msg = b'Some message to asymmetrically encrypt. 1234567890'
     private_key = open(os.path.join(TEST_PATH, 'rsa_keys/private_2048.pem'), 'rb').read()
     public_key = open(os.path.join(TEST_PATH, 'rsa_keys/public_2048.pem'), 'rb').read()
-    private_key_2 = open(os.path.join(TEST_PATH, 'rsa_keys/private_2_2048.pem'), 'rb').read()
-    private_key_short = open(os.path.join(TEST_PATH, 'rsa_keys/private_1024.pem'), 'rb').read()
 
     def test_encrypt_decrypt(self):
         kp = rsa.RSAKeypair(private_key=self.private_key)
@@ -159,59 +157,3 @@ class TestRSACrypt:
         bad_sess_key = sess_key[1:]
         with pytest.raises(LibreSSLError):
             dec_msg = rsacrypt.decrypt(enc_msg, bad_sess_key, iv)
-
-    def test_multiple_key_encryption(self):
-        kp1 = rsa.RSAKeypair(private_key=self.private_key)
-        kp2 = rsa.RSAKeypair(private_key=self.private_key_2)
-        rsacrypt = rsa.RSACrypt_AES256((kp1, kp2))
-        enc_msg, session_keys, iv = rsacrypt.encrypt(self.good_msg)
-
-        assert len(session_keys) == 2
-
-    def test_multiple_key_encrypt_decrypt(self):
-        kp1 = rsa.RSAKeypair(private_key=self.private_key)
-        kp2 = rsa.RSAKeypair(private_key=self.private_key_2)
-        rsacrypt = rsa.RSACrypt_AES256((kp1, kp2))
-        enc_msg, session_keys, iv = rsacrypt.encrypt(self.good_msg)
-
-        # Check key 1
-        rsacrypt_1 = rsa.RSACrypt_AES256(kp1)
-        dec_msg = rsacrypt_1.decrypt(enc_msg, session_keys[0], iv)
-        assert self.good_msg == dec_msg
-
-        # Check key 2
-        rsacrypt_2 = rsa.RSACrypt_AES256(kp2)
-        dec_msg = rsacrypt_2.decrypt(enc_msg, session_keys[1], iv)
-        assert self.good_msg == dec_msg
-
-    def test_multiple_key_different_sizes(self):
-        kp1 = rsa.RSAKeypair(private_key=self.private_key)
-        kp2 = rsa.RSAKeypair(private_key=self.private_key_short)
-        rsacrypt = rsa.RSACrypt_AES256((kp1, kp2))
-        enc_msg, session_keys, iv = rsacrypt.encrypt(self.good_msg)
-        assert len(session_keys) == 2
-
-        dec_msg = rsacrypt.decrypt(enc_msg, session_keys[0], iv, key_idx=0)
-        assert dec_msg == self.good_msg
-
-    def test_multiple_key_three(self):
-        kp1 = rsa.RSAKeypair(private_key=self.private_key)
-        kp2 = rsa.RSAKeypair(private_key=self.private_key_short)
-        kp3 = rsa.RSAKeypair(private_key=self.private_key_2)
-        rsacrypt = rsa.RSACrypt_AES256((kp1, kp2, kp3))
-        enc_msg, session_keys, iv = rsacrypt.encrypt(self.good_msg)
-        assert len(session_keys) == 3
-
-        dec_msg = rsacrypt.decrypt(enc_msg, session_keys[2], iv, key_idx=2)
-        assert dec_msg == self.good_msg
-
-    def test_multiple_key_different_decrypt_key(self):
-        kp1 = rsa.RSAKeypair(private_key=self.private_key)
-        kp2 = rsa.RSAKeypair(private_key=self.private_key_short)
-        rsacrypt = rsa.RSACrypt_AES256((kp1, kp2))
-        enc_msg, session_keys, iv = rsacrypt.encrypt(self.good_msg)
-
-        kp3 = rsa.RSAKeypair(private_key=self.private_key_2)
-        rsacrypt_false = rsa.RSACrypt_AES256(kp3)
-        with pytest.raises(LibreSSLError):
-            dec_msg = rsacrypt_false.decrypt(enc_msg, session_keys[0], iv)

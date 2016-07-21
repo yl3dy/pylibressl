@@ -1,4 +1,4 @@
-from ..lib import retrieve_bytes, check_status, get_libressl_error
+from ..lib import retrieve_bytes, check_status
 from ..exceptions import *
 from .. import _libressl
 from ..cipher import AES256_CTR
@@ -21,25 +21,10 @@ class RSACrypt(object):
         return new_rsa_cipher
 
     def __init__(self, keypair):
-        """Create RSA ciphering object.
-
-        :param keypair: list of or a single RSAKeypair object
-
-        """
-        if isinstance(keypair, RSAKeypair):
-            self._keypairs = (keypair,)
-        elif isinstance(keypair, (list, tuple)):   # TODO: more sane check if keypair is a list
-            keysize = None
-            for kp in keypair:
-                if not isinstance(kp, RSAKeypair):
-                    raise ValueError('RSAKeypair should be an RSAKeypair instance ' +
-                                     'or a list of them')
-            self._keypairs = tuple(keypair)
-        else:
-            raise ValueError('RSAKeypair should be an RSAKeypair instance ' +
-                             'or a list of them')
-
-
+        """Create Rsa ciphering object."""
+        if not isinstance(keypair, RSAKeypair):
+            raise ValueError('Keypair should be RSAKeypair instance')
+        self._keypair = keypair
 
     def encrypt(self, data):
         if type(data) != type(b''):
@@ -47,28 +32,25 @@ class RSACrypt(object):
 
         c_msg = ffi.new('unsigned char[]', data)
         c_msg_len = len(data)
+        c_session_key = ffi.new('unsigned char[]', self._keypair.key_size())
+        c_session_key_len = ffi.new('int*')
         c_iv = ffi.new('unsigned char[]', self._cipher_type.iv_length())
         c_enc_msg = ffi.new('unsigned char[]', 2*c_msg_len)
         c_enc_msg_len = ffi.new('int*')
 
+        c_pkey = self._keypair._c_pkey
         c_cipher_id = self._cipher_type._CIPHER_ID
         ctx_tracker = self._cipher_type.ctx()    # track cipher ctx only
         c_cipher_ctx = ctx_tracker.c_cipher_ctx
 
-        c_pkeys = ffi.new('EVP_PKEY*[]', [kp._c_pkey for kp in self._keypairs])
-        c_session_keys = ffi.new('unsigned char*[]',
-                                 [ffi.new('unsigned char[]', key.key_size())
-                                  for key in self._keypairs])
-        c_session_key_len = ffi.new('int[]', len(self._keypairs))
+        # TODO: many pkeys/session_keys
+        c_pkeys = ffi.new('EVP_PKEY*[1]', (c_pkey,))
+        c_session_keys = ffi.new('unsigned char*[]', (c_session_key,))
+        keynum = 1
 
-        def seal_init_errcheck(errcode):
-            """Custom error code check for EVP_SealInit."""
-            if errcode == 0:
-                raise LibreSSLError(*get_libressl_error())
         check_status(clib.EVP_SealInit(c_cipher_ctx, c_cipher_id,
                                        c_session_keys, c_session_key_len, c_iv,
-                                       c_pkeys, len(self._keypairs)),
-                     action=seal_init_errcheck)
+                                       c_pkeys, keynum))
 
         check_status(clib._wrap_EVP_SealUpdate(c_cipher_ctx, c_enc_msg,
                                                c_enc_msg_len, c_msg,
@@ -81,20 +63,11 @@ class RSACrypt(object):
 
         encoded_msg = retrieve_bytes(c_enc_msg, enc_msg_len)
         iv = retrieve_bytes(c_iv, self._cipher_type.iv_length())
-        session_keys = [retrieve_bytes(c_session_keys[i], c_session_key_len[i])
-                        for i in range(len(self._keypairs))]
-        if len(session_keys) == 1:
-            session_keys = session_keys[0]
+        session_key = retrieve_bytes(c_session_keys[0], c_session_key_len[0])
 
-        return encoded_msg, session_keys, iv
+        return encoded_msg, session_key, iv
 
-    def decrypt(self, data, session_key, iv, key_idx=0):
-        """Decrypt RSA ciphertext.
-
-        :param key_idx: index of keypair to use for decryption. Usually should
-                        be 0.
-
-        """
+    def decrypt(self, data, session_key, iv):
         if type(data) != type(b''):
             raise ValueError('Data should be a byte string')
         if type(session_key) != type(b''):
@@ -108,7 +81,7 @@ class RSACrypt(object):
         c_msg = ffi.new('unsigned char[]', 2*c_enc_msg_len)
         c_msg_len = ffi.new('int*')
 
-        c_pkey = self._keypairs[key_idx]._c_pkey
+        c_pkey = self._keypair._c_pkey
         c_cipher_id = self._cipher_type._CIPHER_ID
         ctx_tracker = self._cipher_type.ctx()    # track cipher ctx only
         c_cipher_ctx = ctx_tracker.c_cipher_ctx
