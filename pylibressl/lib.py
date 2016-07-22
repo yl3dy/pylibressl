@@ -47,6 +47,7 @@ def check_status(status_code, action=None):
         - 'null': check if status_code is NULL
         - 'auth': check if status_code == 0 (authentication in GCM mode)
         - 'verify': return True on 1, False on 0, raise exception on other
+        - 'bio': check if status code is positive (for BIO read/write)
         - callable: call it with status_code as argument
 
     """
@@ -65,6 +66,9 @@ def check_status(status_code, action=None):
         elif status_code == 0:
             return False
         else:
+            raise LibreSSLError(*get_libressl_error())
+    elif action == 'bio':
+        if status_code <= 0:
             raise LibreSSLError(*get_libressl_error())
     elif callable(action):
         action(status_code)

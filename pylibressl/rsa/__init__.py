@@ -2,7 +2,8 @@
 RSA signing and encryption.
 
 Contains routines to sign/verify, encrypt/decrypt messages using RSA and a
-wrapper class to store RSA keypair. Note that only keys in PEM format are
+wrapper class to store RSA keypair. Also it supports generation of RSA keys
+with custom length and exponent. Note that only keys in PEM format are
 supported.
 
 Signing example:
@@ -39,6 +40,7 @@ Cipher example:
 from .keypair import RSAKeypair
 from .sign import RSASign, RSASign_SHA512
 from .cipher import RSACrypt, RSACrypt_AES256
+from .keygen import generate_rsa_key
 
 __all__ = ['RSAKeypair', 'RSASign', 'RSACrypt', 'RSASign_SHA512',
-           'RSACrypt_AES256']
+           'RSACrypt_AES256', 'generate_rsa_key']

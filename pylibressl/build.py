@@ -23,13 +23,32 @@ if sys.platform.startswith('win'):
 cdef = '''
 void OPENSSL_add_all_algorithms_noconf(void);
 typedef ... ENGINE;
-typedef ... BIO;
 
 int CRYPTO_memcmp(const void *a, const void *b, size_t len);
 void OPENSSL_cleanse(void *ptr, size_t len);
 
+/////// BIO /////////
+typedef ... BIO;
+typedef ... BIO_METHOD;
+
+BIO *BIO_new(BIO_METHOD *type);
+BIO_METHOD *BIO_s_mem(void);
 BIO *BIO_new_mem_buf(void *buf, int len);
 void BIO_free_all(BIO *a);
+
+int BIO_read(BIO *b, void *buf, int len);
+size_t BIO_ctrl_pending(BIO *b);
+/////////////////////
+
+/////// BIGNUM /////////
+typedef ... BIGNUM;
+typedef unsigned long BN_ULONG;
+
+BIGNUM *BN_new(void);
+void    BN_free(BIGNUM *a);
+
+int BN_set_word(BIGNUM *a, BN_ULONG w);
+////////////////////////
 
 /////// Error handling /////////
 void ERR_load_crypto_strings(void);
@@ -129,6 +148,7 @@ int EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
 /////// RSA //////////
 typedef ... RSA;
 typedef ... pem_password_cb;
+typedef ... BN_GENCB;
 
 int EVP_PKEY_set1_RSA(EVP_PKEY *pkey, RSA *key);
 
@@ -136,9 +156,16 @@ RSA *PEM_read_bio_RSAPrivateKey(BIO *bp, RSA **x,
                     pem_password_cb *cb, void *u);
 RSA *PEM_read_bio_RSAPublicKey(BIO *bp, RSA **x,
                     pem_password_cb *cb, void *u);
+int PEM_write_bio_RSAPublicKey(BIO *bp, RSA *x);
+int PEM_write_bio_RSAPrivateKey(BIO *bp, RSA *x, const EVP_CIPHER *enc,
+                                unsigned char *kstr, int klen,
+                                pem_password_cb *cb, void *u);
 
+RSA *RSA_new(void);
 void RSA_free(RSA *r);
 int RSA_size(const RSA *rsa);
+
+int RSA_generate_key_ex(RSA *rsa, int bits, BIGNUM *e, BN_GENCB *cb);
 //////////////////////
 
 /////// Asymmetric cipher //////////
