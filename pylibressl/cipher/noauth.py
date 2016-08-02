@@ -77,7 +77,7 @@ class BaseCipherNoauth(BaseCipher):
                                                   c_tmp_len))
         except LibreSSLError as e:
             if self._MODE in BLOCK_MODES:
-                if e.error_code == 101077092:
+                if 101077092 in e.error_code:
                     raise PaddingError
             else:
                 raise e

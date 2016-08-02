@@ -18,19 +18,30 @@ def initialize_libressl():
     clib.ERR_load_crypto_strings();
 
 def get_libressl_error():
-    """Report LibreSSL error w/o passing a string."""
-    c_errno = clib.ERR_get_error()
-    c_err_msg = clib.ERR_error_string(c_errno, ffi.NULL)
-    err_msg = ffi.string(c_err_msg)
+    """Report LibreSSL error w/o passing a string.
 
-    # Usually, we don't want to see some weird characters from EBDIC.
-    # Still, if there are bytes from range 128-255, then report as a byte
-    # string.
-    try:
-        err_msg = err_msg.decode('ascii')
-    except UnicodeDecodeError:
-        pass
-    return err_msg, c_errno
+    Unrolls the whole error stack.
+
+    """
+    err_msg_list, errno_list = [], []
+    while True:
+        c_errno = clib.ERR_get_error()
+        if c_errno == 0:
+            break
+        c_err_msg = clib.ERR_error_string(c_errno, ffi.NULL)
+        err_msg = ffi.string(c_err_msg)
+
+        # Usually, we don't want to see some weird characters from EBDIC.
+        # Still, if there are bytes from range 128-255, then report as a byte
+        # string.
+        try:
+            err_msg = err_msg.decode('ascii')
+        except UnicodeDecodeError:
+            pass
+        err_msg_list.append(err_msg)
+        errno_list.append(c_errno)
+
+    return err_msg_list, errno_list
 
 def retrieve_bytes(cdata, size):
     """Retrieve byte string from cdata."""
