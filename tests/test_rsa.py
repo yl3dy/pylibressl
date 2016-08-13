@@ -49,6 +49,18 @@ class TestRSAKeypair:
 
 
 
+class TestPublicDerivation:
+    """Test public key derivation from private one."""
+
+    private_key = open(os.path.join(TEST_PATH, 'rsa_keys/private_2048.pem'), 'rb').read()
+    public_key = open(os.path.join(TEST_PATH, 'rsa_keys/public_2048.pem'), 'rb').read()
+
+    def test_correspondence(self):
+        derived_public = rsa.public_from_private(self.private_key)
+        assert derived_public == self.public_key
+
+
+
 class TestRSASign:
     """Test RSA signing."""
 

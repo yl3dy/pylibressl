@@ -1,4 +1,4 @@
-from ..lib import check_status
+from ..lib import check_status, retrieve_bytes
 from ..exceptions import *
 from .. import _libressl
 
@@ -64,3 +64,34 @@ class RSAKeypair(object):
     def key_size(self):
         """Get key size (actually, modulus length) in bytes."""
         return self._modulus_size
+
+
+def public_from_private(private_key):
+    """Derive public key from private one."""
+    if not private_key or type(private_key) != type(b''):
+        raise ValueError('Private key should be a byte string')
+
+    # Allocate buffers
+    c_privkey = ffi.new('const char[]', private_key)
+    c_privkey_bio = ffi.gc(clib.BIO_new_mem_buf(ffi.cast('void*', c_privkey),
+                                            len(private_key)),
+                           clib.BIO_free_all)
+    check_status(c_privkey_bio, 'null')
+    c_pubkey_bio = ffi.gc(clib.BIO_new(clib.BIO_s_mem()), clib.BIO_free_all)
+    check_status(c_pubkey_bio, 'null')
+
+    # Load RSA key
+    c_rsa = ffi.gc(clib.PEM_read_bio_RSAPrivateKey(c_privkey_bio, ffi.NULL,
+                                                   ffi.NULL, ffi.NULL),
+                   clib.RSA_free)
+    check_status(c_rsa, 'null')
+
+    # Derive public key
+    check_status(clib.PEM_write_bio_RSAPublicKey(c_pubkey_bio, c_rsa))
+    pubkey_len = clib.BIO_ctrl_pending(c_pubkey_bio)
+    c_pubkey = ffi.new('unsigned char[]', pubkey_len)
+    check_status(clib.BIO_read(c_pubkey_bio, ffi.cast('void*', c_pubkey),
+                               pubkey_len), 'bio')
+
+    pubkey = retrieve_bytes(c_pubkey, pubkey_len)
+    return pubkey

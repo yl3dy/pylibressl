@@ -37,10 +37,10 @@ Cipher example:
 
 """
 
-from .keypair import RSAKeypair
+from .keypair import RSAKeypair, public_from_private
 from .sign import RSASign, RSASign_SHA512
 from .cipher import RSACrypt, RSACrypt_AES256
 from .keygen import generate_rsa_key
 
 __all__ = ['RSAKeypair', 'RSASign', 'RSACrypt', 'RSASign_SHA512',
-           'RSACrypt_AES256', 'generate_rsa_key']
+           'RSACrypt_AES256', 'generate_rsa_key', 'public_from_private']

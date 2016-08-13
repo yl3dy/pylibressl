@@ -18,12 +18,11 @@ Exceptions
 
 All exceptions are found in :doc:`pylibressl.exceptions`.
 
-* ``AuthencityError``: message is not authentic. Used with authenticated
-  decryption (e.g. AES-GCM);
+* ``AuthencityError``: message is not authentic. Used with authenticated decryption (e.g. AES-GCM);
 * ``PaddingError``: message padding is wrong (block cipher decryption);
 * ``RSAKeyError``: RSA key reading was unsuccessful;
-* ``LibreSSLError``: generic LibreSSL error. Original error message and error
-  code can be retrieved with ``LibreSSLError.message`` and ``LibreSSL.error_code``.
+* ``DigestReuseError``: ``BaseDigest.digest()`` method called more than once;
+* ``LibreSSLError``: generic LibreSSL error. Note that several errors may be raised at once. Original error messages and error codes can be retrieved with ``LibreSSLError.message`` and ``LibreSSL.error_code`` (both are always lists). If these lists are empty, it is likely a bug in pylibressl.
 
 
 Examples
