@@ -174,17 +174,17 @@ class TestRSACrypt:
 class TestRSAKeygen:
     def test_create(self):
         KEY_SIZE_BITS = 2048
-        privkey, pubkey = rsa.generate_rsa_key(KEY_SIZE_BITS)
-        kp = rsa.RSAKeypair(public_key=pubkey, private_key=privkey)
+        privkey = rsa.generate_rsa_key(KEY_SIZE_BITS)
+        kp = rsa.RSAKeypair(private_key=privkey)
         assert kp.key_size() * 8 == KEY_SIZE_BITS
 
     def test_wrong_types(self):
         with pytest.raises(ValueError):
-            privkey, pubkey = rsa.generate_rsa_key('asdfasdf')
+            privkey = rsa.generate_rsa_key('asdfasdf')
         with pytest.raises(ValueError):
-            privkey, pubkey = rsa.generate_rsa_key(2048, 'asdfasdf')
+            privkey = rsa.generate_rsa_key(2048, 'asdfasdf')
 
     def test_even_exponent(self):
         exponent = 2
         with pytest.raises(ValueError):
-            privkey, pubkey = rsa.generate_rsa_key(exponent=exponent)
+            privkey = rsa.generate_rsa_key(exponent=exponent)

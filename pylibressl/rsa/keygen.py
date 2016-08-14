@@ -6,11 +6,11 @@ ffi, clib = _libressl.ffi, _libressl.lib
 
 # TODO: encrypt private key
 def generate_rsa_key(bits=2048, exponent=65537):
-    """Generate RSA keypair.
+    """Generate RSA key.
 
     :param bits: key length in bits
     :param exponent: exponent value, should be odd
-    :returns: tuple of private and public key bytestrings in PEM format
+    :returns: private key bytestring in PEM format
 
     """
     bits = int(bits)
@@ -27,8 +27,6 @@ def generate_rsa_key(bits=2048, exponent=65537):
     check_status(clib.BN_set_word(c_exponent, exponent))
 
     # Create BIOs for keys
-    c_pubkey_bio = ffi.gc(clib.BIO_new(clib.BIO_s_mem()), clib.BIO_free_all)
-    check_status(c_pubkey_bio, 'null')
     c_privkey_bio = ffi.gc(clib.BIO_new(clib.BIO_s_mem()), clib.BIO_free_all)
     check_status(c_privkey_bio, 'null')
 
@@ -37,22 +35,14 @@ def generate_rsa_key(bits=2048, exponent=65537):
     check_status(clib.PEM_write_bio_RSAPrivateKey(c_privkey_bio, c_rsa, ffi.NULL,
                                                   ffi.NULL, 0, ffi.NULL,
                                                   ffi.NULL))
-    check_status(clib.PEM_write_bio_RSAPublicKey(c_pubkey_bio, c_rsa))
 
     # Retrieve key data from BIOs (ugh)
     privkey_len = clib.BIO_ctrl_pending(c_privkey_bio)
-    pubkey_len = clib.BIO_ctrl_pending(c_pubkey_bio)
     c_privkey = ffi.new('unsigned char[]', privkey_len)
-    c_pubkey = ffi.new('unsigned char[]', pubkey_len)
 
     check_status(clib.BIO_read(c_privkey_bio, ffi.cast('void*', c_privkey),
-                                                       privkey_len),
-                 'bio')
-    check_status(clib.BIO_read(c_pubkey_bio, ffi.cast('void*', c_pubkey),
-                                                       pubkey_len),
-                 'bio')
+                               privkey_len), 'bio')
 
-    pubkey = retrieve_bytes(c_pubkey, pubkey_len)
     privkey = retrieve_bytes(c_privkey, privkey_len)
 
-    return privkey, pubkey
+    return privkey
