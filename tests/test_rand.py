@@ -1,5 +1,6 @@
 import pytest
 from pylibressl.rand import get_random_bytes, libressl_get_random_bytes
+from pylibressl.rand import getrandbits
 
 class GenericRandTest:
     _randfunc = (None,)    # ugly hack to prevent making _randfunc a method
@@ -36,3 +37,18 @@ class TestSystemRand(GenericRandTest):
 
 class TestLibreSSLRand(GenericRandTest):
     _randfunc = (libressl_get_random_bytes,)
+
+
+class TestGetrandbits:
+    def test_non_int_length(self):
+        with pytest.raises(TypeError):
+            getrandbits('asdfasdf')
+
+    def test_too_short_length(self):
+        with pytest.raises(ValueError):
+            getrandbits(-10)
+
+    def test_output_length(self):
+        length = 13
+        rv = getrandbits(length)
+        assert rv <= ((1 << length) - 1)

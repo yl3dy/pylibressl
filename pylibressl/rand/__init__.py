@@ -11,6 +11,6 @@ Usage example:
 
 """
 
-from .rand import get_random_bytes, libressl_get_random_bytes
+from .rand import get_random_bytes, libressl_get_random_bytes, getrandbits
 
-__all__ = ['get_random_bytes', 'libressl_get_random_bytes']
+__all__ = ['get_random_bytes', 'libressl_get_random_bytes', 'getrandbits']
