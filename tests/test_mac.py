@@ -52,6 +52,9 @@ class GenericHMACTest:
         signature = mac.sign(self.GOOD_STRING)
         assert len(signature) == mac.sign_size()
 
+    def test_inheritance_identification(self):
+        assert issubclass(self.HMAC_CLASS, HMAC)
+
 
 class TestHMACStreebog512(GenericHMACTest):
     HMAC_CLASS = HMAC.new(Streebog512)

@@ -9,15 +9,12 @@ class HMAC(object):
     """Generic HMAC class."""
 
     @classmethod
-    def new(cls, hash_type):
+    def new(cls, hash_type, name='NewHMAC'):
         """Create new HMAC class with specified digest."""
         if not issubclass(hash_type, BaseHash):
             raise ValueError('Hash type should be a BaseHash subclass')
 
-        class new_hmac(cls):
-            _digest_type = hash_type
-
-        return new_hmac
+        return type(name, (cls,), {'_digest_type': hash_type})
 
     def __init__(self, private_key):
         """Create new HMAC instance."""
@@ -87,5 +84,5 @@ class HMAC(object):
         """Return size of an authentication code."""
         return self._digest_type.size()
 
-HMAC_Streebog512 = HMAC.new(Streebog512)
+HMAC_Streebog512 = HMAC.new(Streebog512, name='HMAC_Streebog512')
 HMAC_Streebog512.__doc__ = 'HMAC_Streebog512'

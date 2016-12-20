@@ -149,6 +149,9 @@ class TestRSASign:
         bad_signature = signature[3:]
         assert not signer.verify(self.good_message, bad_signature)
 
+    def test_inheritance_identification(self):
+        assert issubclass(rsa.RSASign_SHA512, rsa.RSASign)
+
 
 class TestRSACrypt:
     good_msg = b'Some message to asymmetrically encrypt. 1234567890'
@@ -169,6 +172,9 @@ class TestRSACrypt:
         bad_sess_key = sess_key[1:]
         with pytest.raises(LibreSSLError):
             dec_msg = rsacrypt.decrypt(enc_msg, bad_sess_key, iv)
+
+    def test_inheritance_identification(self):
+        assert issubclass(rsa.RSACrypt_AES256, rsa.RSACrypt)
 
 
 class TestRSAKeygen:

@@ -7,15 +7,12 @@ ffi, clib = _libressl.ffi, _libressl.lib
 
 class PBKDF_HMAC(object):
     @classmethod
-    def new(cls, hash_type):
+    def new(cls, hash_type, name='NewPBKDF'):
         """Create new PBKDF object."""
         if not issubclass(hash_type, BaseHash):
             raise ValueError('Hash type should be BaseHash instance')
 
-        class new_pbkdf_hmac(cls):
-            _hash_id = hash_type._HASH_ID
-
-        return new_pbkdf_hmac
+        return type(name, (cls,), {'_hash_id': hash_type._HASH_ID})
 
     def __init__(self, salt, iteration_number, key_length):
         if type(salt) != type(b''):
@@ -42,8 +39,9 @@ class PBKDF_HMAC(object):
         derived_key = lib.retrieve_bytes(c_out_key, self._keylen)
         return derived_key
 
-PBKDF_HMAC_Streebog512 = PBKDF_HMAC.new(Streebog512)
+PBKDF_HMAC_Streebog512 = PBKDF_HMAC.new(Streebog512,
+                                        name='PBKDF_HMAC_Streebog512')
 PBKDF_HMAC_Streebog512.__doc__ = 'PBKDF-HMAC-Streebog512'
 
-PBKDF_HMAC_SHA256 = PBKDF_HMAC.new(SHA256)
+PBKDF_HMAC_SHA256 = PBKDF_HMAC.new(SHA256, name='PBKDF_HMAC_SHA256')
 PBKDF_HMAC_SHA256.__doc__ = 'PBKDF-HMAC-SHA256'

@@ -36,6 +36,9 @@ class GenericPBKDFTest:
         assert len(key1) == len(key2)
         assert key1 != key2
 
+    def test_inheritance_identification(self):
+        assert issubclass(self.pbkdf_cls, kdf.PBKDF_HMAC)
+
 
 class TestPBKDFPreset_Streebog512(GenericPBKDFTest):
     pbkdf_cls = kdf.PBKDF_HMAC_Streebog512

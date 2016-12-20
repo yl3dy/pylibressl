@@ -11,14 +11,12 @@ class RSACrypt(object):
     """RSA en/decryption class."""
 
     @classmethod
-    def new(cls, symmetric_cipher):
+    def new(cls, symmetric_cipher, name='NewRSACrypt'):
         """Create new RSA cipher class."""
         if not issubclass(symmetric_cipher, BaseCipherNoauth):
             raise ValueError('Symmetric cipher should be BaseCipherNoauth subclass')
 
-        class new_rsa_cipher(cls):
-            _cipher_type = symmetric_cipher
-        return new_rsa_cipher
+        return type(name, (cls,), {'_cipher_type': symmetric_cipher})
 
     def __init__(self, keypair):
         """Create Rsa ciphering object."""

@@ -10,14 +10,12 @@ class RSASign(object):
     """RSA signing class."""
 
     @classmethod
-    def new(cls, digest_type):
+    def new(cls, digest_type, name='NewRSASign'):
         """Create new RSA signing class."""
         if not issubclass(digest_type, BaseHash):
             raise ValueError('Digest type must be a BaseHash subclass')
 
-        class new_rsa_sign(cls):
-            _digest_type = digest_type
-        return new_rsa_sign
+        return type(name, (cls,), {'_digest_type': digest_type})
 
     def __init__(self, rsa_keypair):
         """Create RSA signing object."""
@@ -85,4 +83,5 @@ class RSASign(object):
                             action='verify')
 
 
-RSASign_SHA512 = RSASign.new(SHA512)
+RSASign_SHA512 = RSASign.new(SHA512, name='RSASign_SHA512')
+RSASign_SHA512.__doc__ = 'RSA signatures using SHA512 digest'

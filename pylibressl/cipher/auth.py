@@ -19,18 +19,15 @@ class BaseCipherAuth(BaseCipher):
 class CipherHMAC(BaseCipherAuth):
     """Ready to use cipher+HMAC combination."""
     @classmethod
-    def new(cls, cipher_type, hash_type):
+    def new(cls, cipher_type, hash_type, name='NewCipherHMAC'):
         """Create new cipher+HMAC type."""
         if not issubclass(cipher_type, BaseCipherNoauth):
             raise ValueError('Cipher should be a BaseCipherNoauth subclass')
         if not issubclass(hash_type, BaseHash):
             raise ValueError('Wrong hash type')
 
-        class new_cipher_hmac(cls):
-            CIPHER_TYPE = cipher_type
-            HASH_TYPE = hash_type
-
-        return new_cipher_hmac
+        return type(name, (cls,), {'CIPHER_TYPE': cipher_type, 'HASH_TYPE':
+                                   hash_type})
 
     def __init__(self, key, iv):
         """Initialize cipher+HMAC with key and IV."""
@@ -62,10 +59,12 @@ class CipherHMAC(BaseCipherAuth):
             dec_data = self._cipher.decrypt(data)
         return dec_data
 
-GOST89_HMAC_Streebog512 = CipherHMAC.new(GOST89_CTR, Streebog512)
+GOST89_HMAC_Streebog512 = CipherHMAC.new(GOST89_CTR, Streebog512,
+                                         name='GOST89_HMAC_Streebog512')
 GOST89_HMAC_Streebog512.__doc__ = 'GOST89-HMAC-Streebog512'
 
-AES256_HMAC_SHA512 = CipherHMAC.new(AES256_CTR, SHA512)
+AES256_HMAC_SHA512 = CipherHMAC.new(AES256_CTR, SHA512,
+                                    name='AES256_HMAC_SHA512')
 AES256_HMAC_SHA512.__doc__ = 'AES256-HMAC-SHA512'
 
 

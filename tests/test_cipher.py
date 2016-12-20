@@ -230,6 +230,9 @@ class GenericCipherHMACTest:
         with pytest.raises(AuthencityError):
             dec = cipher_ae.decrypt(bad_enc, auth_code)
 
+    def test_inheritance_identification(self):
+        assert issubclass(self.cipher_hmac, CipherHMAC)
+
 
 class TestCipherHMAC_GOST89_Streebog512_Preset(GenericCipherHMACTest):
     cipher_hmac = GOST89_HMAC_Streebog512
@@ -274,3 +277,6 @@ class TestOnionCipher:
         key_list = [(b'asdf', b'23456789')]
         with pytest.raises(ValueError):
             onion_cipher = Onion_AES256_GOST89(key_list)
+
+    def test_inheritance_identification(self):
+        assert issubclass(Onion_AES256_GOST89, OnionCipher)

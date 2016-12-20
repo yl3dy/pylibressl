@@ -10,7 +10,7 @@ ffi, clib = _libressl.ffi, _libressl.lib
 class OnionCipher(object):
     """Onion ciphering."""
     @classmethod
-    def new(cls, cipher_list_):
+    def new(cls, cipher_list_, name='NewOnionCipher'):
         """Create new onion cipher chain.
 
         Ciphers are set in encryption order.
@@ -26,9 +26,7 @@ class OnionCipher(object):
         except TypeError:
             raise ValueError('cipher_list should be a list-like thing')
 
-        class new_onion_cipher(cls):
-            cipher_list = cipher_list_
-        return new_onion_cipher
+        return type(name, (cls,), {'cipher_list': cipher_list_})
 
     def __init__(self, key_list):
         """Initialize onion ciphering."""
@@ -75,6 +73,7 @@ class OnionCipher(object):
         return message
 
 
-Onion_AES256_GOST89 = OnionCipher.new((AES256_GCM, GOST89_HMAC_Streebog512))
+Onion_AES256_GOST89 = OnionCipher.new((AES256_GCM, GOST89_HMAC_Streebog512),
+                                      name='Onion_AES256_GOST89')
 Onion_AES256_GOST89.__doc__ = 'Onion ciphering: AES256-GCM + ' + \
                               'GOST89-HMAC-Streebog512'
