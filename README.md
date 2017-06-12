@@ -45,7 +45,7 @@ Create directories `$package_path\pylibressl\libressl\{include,lib}`. Copy `buil
 
 ### GNU/Linux
 
-Before testing/building `export LD_LIBRARY_PATH=$package_path/pylibressl/libressl/lib` should be called. To build extensions in dev mode, call `make devbuild`. Run tests using `make tests` or `make quiet_tests`. To build package so it would be available to other tools use `python setup.py install` or `python setup.py develop`.
+Before testing/building `export LD_LIBRARY_PATH=$package_path/pylibressl/libressl/lib` should be called. To build extensions in dev mode, call `make devbuild`. Run tests using `make test` or `make quiet_test`. To build package so it would be available to other tools use `python setup.py install` or `python setup.py develop`.
 
 ### Windows
 
