@@ -20,5 +20,4 @@ docs/*
 !docs/conf.py
 !docs/*.rst
 !docs/Makefile
-docs/pylibressl*.rst
-docs/modules.rst
+!docs/requirements.txt

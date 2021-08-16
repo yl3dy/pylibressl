@@ -54,7 +54,7 @@ Add `$package_path\libressl\lib` to your PATH. Build and install package using `
 
 ## Building documentation
 
-To build documentation, install `sphinx` and run the following in project root:
+To build documentation, install `sphinx` and `sphinx-autoapi` and run the following in project root:
 
     sphinx-apidoc -e -M -o docs/ . setup.py
     cd docs/

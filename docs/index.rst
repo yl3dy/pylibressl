@@ -6,7 +6,7 @@ interface to the most important bits of LibreSSL on Python 3.4+. Supported
 platforms: GNU/Linux, Windows.
 
 For installation instructions see
-`README.md <https://korobok.stonehenge-3.net.ru/yl3dy/pylibressl/src/master/README.md>`_.
+`README.md <https://github.com/yl3dy/pylibressl/blob/master/README.md>`_.
 
 Contents:
 
