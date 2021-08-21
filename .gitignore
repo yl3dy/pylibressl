@@ -18,6 +18,8 @@ pylibressl/libressl/
 # Sphinx docs
 docs/*
 !docs/conf.py
-!docs/*.rst
+!docs/index.rst
+!docs/install.rst
+!docs/usage.rst
 !docs/Makefile
 !docs/requirements.txt
